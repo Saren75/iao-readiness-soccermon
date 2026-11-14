@@ -1,0 +1,5 @@
+comparacion,dif_MAE,p_ttest_particiones,p_wilcoxon_jugadoras,jugadoras_en_que_gana_a
+Ridge C: + carga  vs  Media de 7 días,-0.02272,0.39083,0.00133,37
+Ridge C: + carga  vs  Persistencia,-0.07670,0.05944,0.00005,38
+Ridge B: + bienestar  vs  Ridge A: readiness,0.00177,0.49517,0.53990,26
+Ridge C: + carga  vs  Ridge B: + bienestar,-0.01775,0.04697,0.00037,37

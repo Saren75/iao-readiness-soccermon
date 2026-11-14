@@ -18,32 +18,17 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
+from features import construir_ejemplos
+
 RAIZ = Path(__file__).resolve().parent.parent
 N_PARTICIONES = 5
 
 
 def cargar_ejemplos() -> pd.DataFrame:
-    """Devuelve una fila por ejemplo: un día t de una jugadora en el que se
-    conoce su readiness y también la del día siguiente.
-
-    La columna 'objetivo' es la readiness de t+1. El calendario de la tabla es
-    completo (una fila por día), así que shift(-1) dentro de cada jugadora es
-    exactamente 'mañana' y nunca 'el siguiente día con datos'.
-    """
-    t = pd.read_csv(RAIZ / "data" / "processed" / "jugadora_dia.csv", parse_dates=["fecha"])
-    t = t.sort_values(["jugadora", "fecha"]).reset_index(drop=True)
-    t["objetivo"] = t.groupby("jugadora")["readiness"].shift(-1)
-
-    # Resúmenes del pasado de la propia jugadora. Los dos incluyen el día t y
-    # ninguno mira más allá: se pueden conocer en el momento de predecir.
-    por_jugadora = t.groupby("jugadora")["readiness"]
-    #   media de todos sus cuestionarios hasta hoy (su "nivel habitual")
-    t["media_propia"] = por_jugadora.transform(lambda x: x.expanding().mean())
-    #   media de los últimos 7 días de calendario, con los que haya
-    t["media_7d"] = por_jugadora.transform(lambda x: x.rolling(7, min_periods=1).mean())
-
-    ejemplos = t.dropna(subset=["readiness", "objetivo"]).reset_index(drop=True)
-    return ejemplos
+    """Devuelve los ejemplos (día t -> readiness de t+1) con sus características.
+    Se construyen en features.py; aquí solo se reexportan para que baselines y
+    modelos partan exactamente de las mismas filas."""
+    return construir_ejemplos()
 
 
 def particiones_por_jugadora(ejemplos: pd.DataFrame):

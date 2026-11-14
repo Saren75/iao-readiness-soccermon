@@ -1,0 +1,6 @@
+metodo,MAE_media,MAE_desv,RMSE_media,RMSE_desv,R2_media,R2_desv
+Persistencia,0.7647,0.1106,1.2314,0.1332,0.2207,0.2703
+Media de 7 días,0.7107,0.0876,1.0393,0.1033,0.4452,0.1850
+Ridge A: readiness,0.7040,0.0566,0.9942,0.0851,0.4962,0.1554
+Ridge B: + bienestar,0.7057,0.0529,0.9934,0.0827,0.4977,0.1518
+Ridge C: + carga,0.6880,0.0509,0.9670,0.0819,0.5240,0.1429

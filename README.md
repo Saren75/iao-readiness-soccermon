@@ -4,7 +4,7 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base, análisis exploratorio y baselines hechos. Pendiente: características, modelos y explicabilidad.
+**Estado actual:** tabla base, análisis exploratorio, baselines, características y un primer modelo (Ridge) hechos. Pendiente: Random Forest y MLP con ajuste de hiperparámetros, y explicabilidad.
 
 ## Cómo ejecutarlo
 
@@ -15,19 +15,22 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python src/carga.py
 .venv/bin/python src/aed.py
+.venv/bin/python src/features.py
 .venv/bin/python src/baselines.py
+.venv/bin/python src/modelo_ridge.py
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 
-`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`. `baselines.py` evalúa las referencias.
+`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`. `features.py` genera `data/processed/ejemplos.csv`, `baselines.py` evalúa las referencias y `modelo_ridge.py` el primer modelo.
 
 ## Estructura
 
 ```
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
-src/                   código: carga.py, aed.py, validacion.py (particiones y métricas), baselines.py
+src/                   código: carga.py, aed.py, features.py, validacion.py (particiones y métricas),
+                       baselines.py, modelo_ridge.py
 notebooks/             experimentos
 reports/figures/       figuras para la memoria
 reports/tablas/        los números que hay detrás de cada figura
@@ -212,9 +215,31 @@ Un baseline es una forma de predecir tan simple que no necesita aprendizaje auto
 
 Los tres últimos solo usan el pasado de la propia jugadora, así que sirven también para una jugadora nueva.
 
-### 2.6 Fases siguientes
+### 2.6 Objetivo y características
 
-Pendiente: características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y explicabilidad.
+`src/features.py` convierte la tabla jugadora-día en ejemplos para aprendizaje supervisado y los guarda en `data/processed/ejemplos.csv` (14.631 filas, 56 características). Todas las características usan solo información de días anteriores o iguales a t.
+
+| Bloque | Nº | Contenido |
+|---|---|---|
+| Historial de readiness | 6 | Hoy, ayer, anteayer, media de 3 y de 7 días, y media propia hasta la fecha |
+| Contexto | 11 | Si hay cuestionario ayer y anteayer, días con datos en la última semana, cuestionarios acumulados y día de la semana de mañana |
+| Bienestar | 30 | Las seis variables restantes del cuestionario: hoy, ayer, anteayer, media de 3 y de 7 días |
+| Carga | 9 | Carga de hoy, de ayer y de anteayer, media de 3 días, ATL, CTL de 28 días, ACWR, monotonía y strain |
+
+Decisiones:
+
+- **No se descarta ningún ejemplo por huecos.** Los desfases sin dato (un 11-12 % de los ejemplos) se dejan vacíos y se rellenan con la mediana dentro de la validación, ajustada solo con los datos de entrenamiento. Dos columnas indican si había dato real.
+- **Las medias móviles se calculan con los días disponibles.** Como el día t siempre tiene cuestionario, nunca quedan vacías.
+- **Se quitan las métricas de carga duplicadas**: carga semanal (es ATL por 7), CTL de 42 días y minutos entrenados.
+- **Los baselines y los modelos usan exactamente las mismas 14.631 filas.**
+
+### 2.7 Primer modelo: regresión Ridge
+
+`src/modelo_ridge.py`. Es una regresión lineal con regularización: una suma ponderada de las características. Se entrena tres veces, añadiendo un bloque cada vez, para ver qué aporta cada uno. El relleno de vacíos y el escalado van dentro de un `Pipeline`, de modo que se ajustan solo con los datos de entrenamiento de cada partición. Aún sin ajuste de hiperparámetros (alpha = 1).
+
+### 2.8 Fases siguientes
+
+Pendiente: Random Forest y MLP con ajuste de hiperparámetros dentro de la validación, y SHAP.
 
 ## 3. Resultados
 
@@ -254,6 +279,59 @@ Dónde falla cada uno (MAE, validación por jugadoras):
 - **La persistencia acierta siempre que no hay cambio y falla mucho cuando lo hay** (1,47 puntos de media). Promediar 7 días reparte mejor el error.
 - **Todos fallan más en los días malos.** Cuando la readiness real es de 4 o menos, el mejor baseline se equivoca en 1,5 puntos. Son pocos días, pero son los que más interesaría anticipar.
 - **No hay un baseline que gane para todas las jugadoras.** La media de 7 días es la mejor en 19, la persistencia en 14, la media propia en 11 y la media global en 6.
+
+### 3.2 Primer modelo (Ridge)
+
+![Ridge frente a las referencias](reports/figures/11_ridge_vs_baselines.png)
+
+Validación por jugadoras (media de 5 particiones ± desviación típica):
+
+| Método | MAE | RMSE | R² |
+|---|---|---|---|
+| Persistencia | 0,765 ± 0,111 | 1,231 ± 0,133 | 0,22 |
+| Media de 7 días | 0,711 ± 0,088 | 1,039 ± 0,103 | 0,45 |
+| Ridge A: readiness y contexto | 0,704 ± 0,057 | 0,994 ± 0,085 | 0,50 |
+| Ridge B: + bienestar | 0,706 ± 0,053 | 0,993 ± 0,083 | 0,50 |
+| **Ridge C: + carga** | **0,688 ± 0,051** | **0,967 ± 0,082** | **0,52** |
+
+Comprobación temporal (entrenar con 2020, evaluar en 2021):
+
+| Método | MAE | RMSE | R² |
+|---|---|---|---|
+| Persistencia | 0,736 | 1,194 | 0,38 |
+| Media de 7 días | 0,692 | 1,027 | 0,54 |
+| Ridge C: + carga | 0,693 | 0,976 | 0,59 |
+
+Comparaciones estadísticas (diferencia de MAE; negativa = gana el primero):
+
+| Comparación | Diferencia | t-test pareado (5 particiones) | Wilcoxon (50 jugadoras) | Jugadoras en que gana |
+|---|---|---|---|---|
+| Ridge C frente a media de 7 días | −0,023 | p = 0,39 | p = 0,001 | 37 de 50 |
+| Ridge C frente a persistencia | −0,077 | p = 0,06 | p < 0,001 | 38 de 50 |
+| Ridge B frente a Ridge A (añadir bienestar) | +0,002 | p = 0,50 | p = 0,54 | 26 de 50 |
+| Ridge C frente a Ridge B (añadir carga) | −0,018 | p = 0,047 | p < 0,001 | 37 de 50 |
+
+Lectura:
+
+- **El modelo mejora al mejor baseline, pero por poco.** El MAE baja un 3 % y el RMSE un 7 % respecto a la media de 7 días. La mejora es clara en RMSE y por jugadora (gana en 37 de 50), pero no es significativa con el t-test sobre las cinco particiones, y en la comprobación temporal el MAE empata.
+- **La carga de entrenamiento sí aporta.** Añadirla baja el error de forma significativa en las dos pruebas. En el AED su correlación con la readiness de mañana era baja (−0,10), pero combinada con el resto de entradas resulta útil.
+- **El resto del bienestar no aporta** una vez que el modelo ya conoce el historial de readiness.
+
+![Coeficientes de Ridge](reports/figures/12_ridge_coeficientes.png)
+
+- **Lo que más pesa** es la media de readiness de 7 días y la readiness de hoy. La tercera es la carga de hoy, en negativo: tras un día de mucha carga, el modelo predice menos readiness.
+- **El domingo baja la predicción.** Si mañana es domingo, el modelo resta readiness.
+- **Cuidado al interpretar coeficientes sueltos.** Varias entradas están muy correlacionadas (por ejemplo las medias de 3 y 7 días), y el modelo reparte el peso entre ellas con signos opuestos.
+
+Dónde falla (MAE, validación por jugadoras):
+
+| Método | Mañana = hoy | Mañana ≠ hoy | Readiness baja (1-4) | Media (5-7) | Alta (8-10) |
+|---|---|---|---|---|---|
+| Persistencia | 0,000 | 1,466 | 1,485 | 0,754 | 0,656 |
+| Media de 7 días | 0,387 | 1,008 | 1,580 | 0,633 | 0,696 |
+| Ridge C | 0,416 | 0,937 | 1,758 | 0,580 | 0,693 |
+
+- **Ridge gana en los días normales y pierde en los malos.** Es el mejor cuando la readiness real está entre 5 y 7 y cuando hay cambio, pero el peor cuando es 4 o menos: tiende a predecir valores cercanos a la media.
 
 ## 4. Análisis y discusión
 

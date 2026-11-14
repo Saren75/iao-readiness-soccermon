@@ -41,7 +41,7 @@ def predecir(entrenamiento: pd.DataFrame, prueba: pd.DataFrame) -> dict:
     return {
         "Media global": np.full(len(prueba), entrenamiento["objetivo"].mean()),
         "Media propia": prueba["media_propia"].to_numpy(),
-        "Media de 7 días": prueba["media_7d"].to_numpy(),
+        "Media de 7 días": prueba["readiness_m7"].to_numpy(),
         "Persistencia": prueba["readiness"].to_numpy(),
     }
 
