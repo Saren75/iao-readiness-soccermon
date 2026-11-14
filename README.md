@@ -4,7 +4,7 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base construida (fase 1). Pendiente: análisis exploratorio, baselines, modelos y explicabilidad.
+**Estado actual:** tabla base (fase 1) y análisis exploratorio (fase 2) hechos. Pendiente: baselines, características, modelos y explicabilidad.
 
 ## Cómo ejecutarlo
 
@@ -14,20 +14,22 @@ Hace falta Python 3.11 o superior.
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python src/carga.py
+.venv/bin/python src/aed.py
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 
-El último comando regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos.
+`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`.
 
 ## Estructura
 
 ```
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
-src/                   código: carga.py (fase 1)
-notebooks/             análisis exploratorio y experimentos
+src/                   código: carga.py (fase 1), aed.py (fase 2)
+notebooks/             experimentos
 reports/figures/       figuras para la memoria
+reports/tablas/        los números que hay detrás de cada figura
 ```
 
 ---
@@ -114,9 +116,82 @@ Decisiones y su justificación:
 - **Solo se reorganiza lo medido.** En esta fase no se crea el objetivo ni ninguna característica nueva.
 - **Las métricas de carga usan solo el pasado.** Comprobado: la carga semanal es la suma de los últimos 7 días, ATL la media de 7, CTL la de 28 o 42 y ACWR es ATL entre CTL28. Todas llegan hasta el día t, así que son entradas válidas.
 
-### 2.3 Fases siguientes
+### 2.3 Fase 2: análisis exploratorio
 
-Pendiente: análisis exploratorio, baselines, objetivo y características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y validación.
+`src/aed.py` genera nueve figuras y ocho tablas. No entrena nada: sirve para decidir con datos.
+
+#### Cuántos datos hay y dónde están los huecos
+
+![Días con datos por jugadora](reports/figures/01_dias_por_jugadora.png)
+
+![Calendario de respuestas](reports/figures/02_calendario_respuestas.png)
+
+![Tasa de respuesta por mes](reports/figures/03_respuesta_mensual.png)
+
+- **Los huecos no son aleatorios.** El equipo A no empieza a registrar hasta mediados de marzo de 2020 y el equipo B deja de hacerlo a mediados de noviembre de 2021. Ambos caen en diciembre, entre temporadas, y hay jugadoras que solo aparecen una de las dos.
+- **Dentro de su periodo activo, cada jugadora contesta bastante.** Sobre los 731 días la cobertura es del 46,5 %, pero entre su primer y su último cuestionario la mediana es del 73,5 % (de 11,7 % a 99,1 %).
+- **El equipo A contesta más** que el B casi todos los meses.
+- **Cuando hay cuestionario, está completo.** Menos del 0,2 % de valores ausentes en cada variable de bienestar.
+
+#### Cómo es la readiness
+
+![Distribución de la readiness](reports/figures/04_distribucion_readiness.png)
+
+![Readiness por jugadora](reports/figures/05_readiness_por_jugadora.png)
+
+- **Está concentrada en la zona media-alta.** Media 6,80 y mediana 7; el 92,5 % de las respuestas está entre 5 y 9 y solo el 3,5 % es 3 o menos. Los días malos, que son los más interesantes, son pocos.
+- **Cada jugadora tiene su nivel.** Las medias individuales van de 4,87 a 8,59. La desviación entre jugadoras (0,79) es comparable a la variación de una misma jugadora de un día a otro (1,17).
+
+#### Cuánto se parece a los días anteriores
+
+![Autocorrelación y cambio diario](reports/figures/06_autocorrelacion_y_cambio.png)
+
+- **Mucho, y de forma duradera.** La correlación con el día anterior es 0,64 y a 14 días sigue en 0,54. Esa parte que no decae es el nivel propio de cada jugadora.
+- **Quitando ese nivel, la memoria es corta.** Comparando a cada jugadora consigo misma, la correlación baja a 0,45 con el día anterior y a 0,33 con dos días antes.
+- **Casi la mitad de los días no cambia.** El 47,8 % de las veces la readiness de mañana es igual a la de hoy, y el 84,6 % cambia como mucho un punto.
+
+#### Qué se relaciona con la readiness de mañana
+
+![Correlaciones con el objetivo](reports/figures/07_correlaciones_objetivo.png)
+
+![Matriz de correlación](reports/figures/08_matriz_correlacion.png)
+
+- **Lo que más informa es la readiness de hoy** (0,62; 0,41 dentro de cada jugadora), seguida del bienestar de hoy: fatiga, estrés, dolor muscular y ánimo (entre 0,12 y 0,15 dentro de cada jugadora).
+- **La carga de entrenamiento se relaciona poco.** Ninguna métrica de carga pasa de 0,10 en valor absoluto. La más clara es la carga del día: a más carga hoy, algo menos de readiness mañana (−0,10).
+- **Hay entradas redundantes.** La carga semanal y el ATL son la misma información (correlación 1,00: una es la suma de 7 días y la otra su media). También van casi juntas CTL de 28 y de 42 días (0,93), minutos y carga del día (0,93), y strain con carga semanal y con monotonía (0,91).
+
+![Series de ejemplo](reports/figures/09_series_ejemplo.png)
+
+- **Hay respuestas repetidas durante semanas.** La jugadora A04 contesta 3 casi todos los días desde abril de 2021. En conjunto, el 5,6 % de los cuestionarios pertenece a rachas de 14 o más días seguidos con el mismo valor (8 jugadoras). En esos tramos la persistencia acierta siempre, sin que eso signifique capacidad de predicción.
+- **La persistencia funciona muy distinto según la jugadora.** El porcentaje de días sin cambio va del 19 % al 95 %, y el MAE de la persistencia por jugadora de 0,10 a 1,82.
+
+#### Cuántos ejemplos quedan según el tratamiento de los huecos
+
+| Criterio | Ejemplos | % | Jugadoras |
+|---|---|---|---|
+| Readiness hoy y mañana (mínimo imprescindible) | 14.631 | 100 | 50 |
+| + cuestionario ayer | 12.987 | 88,8 | 50 |
+| + ayer y anteayer | 11.769 | 80,4 | 49 |
+| + al menos 4 de los últimos 7 días | 13.897 | 95,0 | 49 |
+| + los 7 últimos días completos | 8.872 | 60,6 | 46 |
+
+| Mínimo de pares por jugadora | Jugadoras | Pares | % |
+|---|---|---|---|
+| 1 | 50 | 14.631 | 100 |
+| 30 | 47 | 14.576 | 99,6 |
+| 60 | 45 | 14.471 | 98,9 |
+| 100 | 38 | 13.909 | 95,1 |
+
+#### Qué implica para el diseño (propuestas, pendientes de acordar)
+
+- **Usar el pasado de la propia jugadora como entrada** (su media hasta la fecha), porque su nivel habitual explica buena parte de la readiness.
+- **No exigir los 7 días anteriores completos**, que tiraría el 39 % de los ejemplos. Calcular las medias móviles con los días disponibles y pedir un mínimo.
+- **Quitar entradas duplicadas** (carga semanal o ATL, una de las dos CTL) o justificar por qué se dejan.
+- **Esperar una mejora moderada sobre la persistencia** y analizarla por jugadora, no solo en media.
+
+### 2.4 Fases siguientes
+
+Pendiente: baselines dentro del esquema de validación, objetivo y características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y validación.
 
 ## 3. Resultados
 
@@ -137,6 +212,9 @@ Limitaciones conocidas hasta ahora:
 - **Huecos.** Más de la mitad de los días-jugadora no tiene cuestionario, y el reparto entre jugadoras es muy desigual.
 - **Ceros ambiguos en la carga.** Un 0 no distingue «no entrenó» de «no lo registró».
 - **Pequeñas incoherencias en el origen.** En 110 de 14.197 días con sesión, la carga diaria del dataset no coincide con la suma de sus sesiones; hay 76 sesiones repetidas; el strain no se reproduce exactamente con la fórmula habitual.
+- **Respuestas repetidas.** Algunas jugadoras contestan el mismo valor durante semanas, lo que favorece a la persistencia.
+- **Cuestionarios con retraso.** La aplicación permite contestar por días anteriores, así que parte de las respuestas pueden ser de memoria.
+- **Pocos días malos.** Solo el 3,5 % de las respuestas es 3 o menos.
 - **Datos subjetivos** de solo dos equipos femeninos de una liga.
 
 ## 5. Conclusiones
