@@ -1,0 +1,15 @@
+# Entorno virtual de Python: cada uno lo crea en su ordenador con requirements.txt
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Archivos del sistema y del editor
+.DS_Store
+.vscode/
+.claude/
+
+# Material de la asignatura y notas personales: no forman parte del proyecto
+CLAUDE.md
+view.php.html
+IAO_Practica_Final_Seguimiento_*.pdf
