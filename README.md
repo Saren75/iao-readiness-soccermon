@@ -28,7 +28,6 @@ En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
 src/                   código: carga.py, aed.py, validacion.py (particiones y métricas), baselines.py
-notebooks/             experimentos
 reports/figures/       figuras para la memoria
 reports/tablas/        los números que hay detrás de cada figura
 ```
@@ -158,7 +157,7 @@ Decisiones y su justificación:
 ![Matriz de correlación](reports/figures/08_matriz_correlacion.png)
 
 - **Lo que más informa es la readiness de hoy** (0,62; 0,41 dentro de cada jugadora), seguida del bienestar de hoy: fatiga, estrés, dolor muscular y ánimo (entre 0,12 y 0,15 dentro de cada jugadora).
-- **La carga de entrenamiento se relaciona poco.** Ninguna métrica de carga pasa de 0,10 en valor absoluto. La más clara es la carga del día: a más carga hoy, algo menos de readiness mañana (−0,10).
+- **La carga de entrenamiento, por sí sola, se relaciona poco.** Mirada una a una, ninguna métrica de carga pasa de 0,10 en valor absoluto. La más clara es la carga del día: a más carga hoy, algo menos de readiness mañana (−0,10). Falta ver qué aporta combinada con el resto de entradas, que es lo que medirán los modelos.
 - **Hay entradas redundantes.** La carga semanal y el ATL son la misma información (correlación 1,00: una es la suma de 7 días y la otra su media). También van casi juntas CTL de 28 y de 42 días (0,93), minutos y carga del día (0,93), y strain con carga semanal y con monotonía (0,91).
 
 ![Series de ejemplo](reports/figures/09_series_ejemplo.png)
@@ -183,7 +182,7 @@ Decisiones y su justificación:
 | 60 | 45 | 14.471 | 98,9 |
 | 100 | 38 | 13.909 | 95,1 |
 
-#### Qué implica para el diseño (propuestas, pendientes de acordar)
+#### Decisiones para la siguiente fase
 
 - **Usar el pasado de la propia jugadora como entrada** (su media hasta la fecha), porque su nivel habitual explica buena parte de la readiness.
 - **No exigir los 7 días anteriores completos**, que tiraría el 39 % de los ejemplos. Calcular las medias móviles con los días disponibles y pedir un mínimo.
@@ -214,7 +213,20 @@ Los tres últimos solo usan el pasado de la propia jugadora, así que sirven tam
 
 ### 2.6 Fases siguientes
 
-Pendiente: características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y explicabilidad.
+Tareas que faltan para la entrega:
+
+1. **Características**: desfases de 1 y 2 días y medias móviles de 3 y 7 días de bienestar y carga, construidas solo con días anteriores.
+2. **Modelos**: Random Forest y perceptrón multicapa, con ajuste de hiperparámetros dentro de la validación.
+3. **Comparación estadística** entre modelos y frente a la referencia (ANOVA y t-test).
+4. **Explicabilidad**: SHAP sobre el mejor modelo.
+5. **Análisis de errores**: por jugadora, por nivel de readiness y por cantidad de huecos.
+6. **Extensión opcional**: recomendación de carga a partir de la readiness predicha.
+
+| Fecha | Hito |
+|---|---|
+| 27 de noviembre | Vídeo de presentación |
+| 2, 3 y 9 de diciembre | Defensa oral |
+| 13 de diciembre | Memoria técnica y código |
 
 ## 3. Resultados
 
