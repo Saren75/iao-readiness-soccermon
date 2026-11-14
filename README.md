@@ -4,7 +4,7 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base, análisis exploratorio, baselines, características y modelos (Ridge, Random Forest y MLP con ajuste de hiperparámetros) hechos. Pendiente: explicabilidad (SHAP), análisis de errores y extensión.
+**Estado actual:** tabla base, análisis exploratorio, baselines, características y modelos (Ridge, Random Forest y MLP con ajuste de hiperparámetros) hechos, con explicabilidad (SHAP) y análisis de errores. Pendiente: extensión opcional y redacción de la memoria.
 
 ## Cómo ejecutarlo
 
@@ -18,7 +18,9 @@ python3 -m venv .venv
 .venv/bin/python src/features.py
 .venv/bin/python src/baselines.py
 .venv/bin/python src/modelo_ridge.py
-.venv/bin/python src/modelos.py      # tarda unos 5 minutos
+.venv/bin/python src/modelos.py            # tarda unos 5 minutos
+.venv/bin/python src/explicabilidad.py     # tarda 1 minuto
+.venv/bin/python src/analisis_errores.py
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
@@ -31,7 +33,7 @@ En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
 src/                   código: carga.py, aed.py, features.py, validacion.py (particiones y métricas),
-                       baselines.py, modelo_ridge.py, modelos.py
+                       baselines.py, modelo_ridge.py, modelos.py, explicabilidad.py, analisis_errores.py
 notebooks/             experimentos
 reports/figures/       figuras para la memoria
 reports/tablas/        los números que hay detrás de cada figura
@@ -254,9 +256,18 @@ Decisiones:
 
 **Un ajuste que hay que contar.** En una primera ejecución la regularización del MLP se probó con 0,001 y 0,1; se elegía casi siempre el valor más alto y el MLP quedaba por detrás (MAE 0,727). Se amplió la rejilla hacia arriba una vez y mejoró a 0,678. Con la rejilla actual sigue eligiendo siempre el valor más alto (10), así que podría quedar margen; no se ha ampliado más para no ajustar el diseño a los resultados de prueba.
 
-### 2.9 Fases siguientes
+### 2.9 Explicabilidad y análisis de errores
 
-Pendiente: SHAP, análisis de errores y extensión opcional.
+**SHAP** (`src/explicabilidad.py`). Para cada predicción, SHAP reparte entre las características la diferencia entre esa predicción y la predicción media. Cada característica recibe un valor en puntos de readiness, positivo si sube la predicción y negativo si la baja, y la suma de todos más el valor base da exactamente la predicción (el código lo comprueba).
+
+- **Se explica Random Forest.** Los tres modelos rinden igual; se elige este porque es el mejor en la comprobación temporal y porque en modelos de árboles SHAP se calcula de forma exacta, sin las aproximaciones que exige una red de neuronas.
+- **Se explican jugadoras no vistas.** En cada partición se entrena con 40 jugadoras y se explican 600 predicciones al azar de las otras 10 (3.000 en total).
+
+**Análisis de errores** (`src/analisis_errores.py`). Usa la predicción de cada ejemplo cuando estaba en la partición de prueba (`reports/tablas/predicciones_cv.csv`) y la desglosa por jugadora, por datos disponibles y por tamaño del cambio.
+
+### 2.10 Fases siguientes
+
+Pendiente: extensión opcional (recomendación de carga) y redacción de la memoria.
 
 ## 3. Resultados
 
@@ -409,6 +420,82 @@ Hiperparámetros elegidos: Ridge alterna entre alpha 0,1 y 100 según la partici
 - **Los modelos se quedan cortos en los extremos.** Cuando la readiness real es 1 o 2, predicen de media entre 4 y 5; cuando es 10, predicen 8. Aciertan mejor en la zona central, donde está casi todo el dato.
 - **Ningún modelo mejora a la persistencia en los días malos** (readiness de 4 o menos). Son el 6 % de los ejemplos y es el punto más débil del sistema.
 
+### 3.4 Explicabilidad (SHAP)
+
+![Importancia SHAP](reports/figures/15_shap_importancia.png)
+
+| Bloque | % de la importancia total |
+|---|---|
+| Historial de readiness | 70 |
+| Carga | 19 |
+| Bienestar | 6 |
+| Contexto | 5 |
+
+- **Lo que más pesa es el pasado de la propia readiness.** La media de los últimos 7 días es, con diferencia, la característica más influyente (mueve la predicción 0,56 puntos de media), seguida de la media propia de la jugadora.
+- **La carga del día es la tercera característica** (0,19 puntos), por delante incluso de la readiness de hoy. El bloque de carga suma el 19 % de la importancia.
+- **El resto del cuestionario apenas cuenta** (6 %): fatiga, sueño, estrés, ánimo y dolor muscular no añaden casi nada a lo que ya dice la readiness.
+- **El día de la semana influye un poco**: si mañana es domingo la predicción baja; si es sábado, sube.
+
+![Dependencia SHAP](reports/figures/16_shap_dependencia.png)
+
+- **La carga tiene un umbral.** Hasta unas 500 unidades de carga diaria el efecto es ligeramente positivo; a partir de ahí la predicción baja, hasta medio punto o más con cargas por encima de 800. Esta forma no lineal es la que un modelo lineal no puede representar.
+- **La media de 7 días actúa casi en línea recta**: cada punto de más en la media sube la predicción alrededor de medio punto.
+
+Dos casos individuales, ambos con readiness real baja:
+
+![Día malo acertado](reports/figures/17_shap_caso_dia_malo_acertado.png)
+
+![Día malo fallado](reports/figures/18_shap_caso_dia_malo_fallado.png)
+
+- **Acierto**: la jugadora lleva una semana con readiness baja (media de 3,1), y eso arrastra la predicción hasta 4,05 (real: 4).
+- **Fallo**: la jugadora viene de una semana buena (media de 8,3) y al día siguiente declara un 2. Nada en sus datos lo anticipaba y el modelo predice 8,5. Es el tipo de día que el sistema no puede prever con esta información.
+
+### 3.5 Análisis de errores
+
+![Análisis de errores](reports/figures/19_analisis_errores.png)
+
+**Por jugadora.** El MAE de Random Forest va de 0,32 a 1,35 según la jugadora (mediana 0,71). Mejora al baseline en 36 de 50.
+
+- **El error depende sobre todo de lo variable que sea la jugadora** (correlación 0,83 con la desviación típica de su readiness). A quien contesta casi siempre lo mismo se le acierta; a quien oscila mucho, no.
+- **Tener más historial ayuda algo** (correlación −0,38 con el número de ejemplos).
+- **En las jugadoras que repiten siempre el mismo valor, el modelo es peor que el baseline.** El caso extremo es B03, que no cambia en el 95 % de los días: el baseline falla 0,12 y el modelo 0,32.
+
+**Según los datos disponibles** (MAE):
+
+| Situación | Ejemplos | Media de 7 días | Random Forest |
+|---|---|---|---|
+| Con cuestionario ayer | 12.987 | 0,703 | 0,682 |
+| Sin cuestionario ayer | 1.644 | 0,776 | 0,733 |
+| 7 días con datos en la última semana | 8.872 | 0,668 | 0,659 |
+| 4 a 6 días | 5.025 | 0,763 | 0,721 |
+| 1 a 3 días | 734 | 0,875 | 0,818 |
+
+- **Los huecos empeoran la predicción, pero el modelo los lleva mejor que el baseline.** Con la semana completa la ventaja del modelo es de 0,01; con 1 a 3 días de datos, de 0,06.
+
+**Según el tamaño del cambio** (MAE):
+
+| Cambio de hoy a mañana | Ejemplos | Persistencia | Media de 7 días | Random Forest |
+|---|---|---|---|---|
+| 0 puntos | 6.997 | 0,000 | 0,387 | 0,450 |
+| 1 punto | 5.374 | 1,000 | 0,749 | 0,671 |
+| 2 puntos | 1.428 | 2,000 | 1,240 | 1,137 |
+| 3 o más | 832 | 3,561 | 2,284 | 2,033 |
+
+- **El modelo gana cuando hay cambio y pierde cuando no lo hay.** Su ventaja crece con el tamaño del cambio, pero en los cambios de 3 puntos o más sigue fallando 2 puntos de media.
+- **Las bajadas se predicen peor que las subidas** (MAE 1,04 frente a 0,79).
+
+**Predicciones cerca del valor real:**
+
+| Método | A 1 punto o menos | Fallo de más de 2 puntos |
+|---|---|---|
+| Persistencia | 84,6 % | 5,7 % |
+| Media de 7 días | 78,7 % | 5,4 % |
+| Random Forest | 77,0 % | 4,4 % |
+
+- **La persistencia acierta más veces "casi"** (a 1 punto o menos), porque la readiness rara vez cambia más de un punto. **El modelo reduce los fallos grandes** (de 5,4 % a 4,4 %). Según qué importe más, uno u otro criterio favorece a un método distinto.
+
+**Por equipo.** En el equipo A el modelo mejora al baseline (0,713 frente a 0,755); en el B no (0,639 frente a 0,623), por el peso de las jugadoras que repiten valor.
+
 ## 4. Análisis y discusión
 
 Limitaciones conocidas hasta ahora:
@@ -421,6 +508,8 @@ Limitaciones conocidas hasta ahora:
 - **Pocos días malos, y mal predichos.** Solo el 3,5 % de las respuestas es 3 o menos, y ahí ningún modelo mejora a la persistencia.
 - **Mejora modesta sobre el mejor baseline**, significativa por jugadora pero no con el t-test sobre cinco particiones.
 - **Rejilla del MLP en el límite.** Elige siempre la regularización más alta probada.
+- **Los cambios bruscos no se anticipan.** Con cambios de 3 puntos o más el error medio sigue siendo de 2 puntos: la información disponible el día anterior no los explica.
+- **SHAP explica el modelo, no la causa.** Que la carga baje la predicción no demuestra que la carga cause menos readiness.
 - **Datos subjetivos** de solo dos equipos femeninos de una liga.
 
 ## 5. Conclusiones
