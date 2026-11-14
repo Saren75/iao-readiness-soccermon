@@ -62,7 +62,39 @@ reports/figures/       figuras para la memoria
 | Sesiones de entrenamiento | 16.265 |
 | Pares (día t, día t+1) con readiness en ambos | 14.631 |
 
-Escalas: readiness de 1 a 10; fatiga, ánimo, calidad del sueño, dolor muscular y estrés de 1 a 5; duración del sueño en horas.
+#### Qué se usa y qué no
+
+| Parte del dataset | Contenido | ¿Se usa? |
+|---|---|---|
+| `wellness/` (7 ficheros) | Cuestionario diario: readiness, fatiga, ánimo, horas y calidad de sueño, dolor muscular, estrés | Sí. Readiness es el objetivo; el resto, entradas |
+| `training-load/session.json` | Cada sesión: duración, esfuerzo percibido (RPE) y su producto (sRPE) | Sí, resumido por día |
+| `training-load/` (8 CSV) | Carga diaria y siete métricas calculadas a partir de ella por los autores | Sí, como entradas |
+| `injury/`, `illness/`, `game-performance/` | 161 avisos de lesión, 14 de enfermedad y 247 valoraciones de partido | No por ahora: son informes puntuales y el alcance acordado es bienestar y carga |
+| Datos objetivos (GPS, 99 GB) | Posición y movimiento en entrenamientos y partidos | No: fuera del alcance acordado |
+
+#### Escalas y su sentido
+
+- Readiness: de 1 («nada preparada») a 10 («con muchas ganas»).
+- Fatiga, ánimo, calidad del sueño, dolor muscular y estrés: de 1 a 5.
+- Duración del sueño: horas.
+
+**En todas las escalas un valor alto es mejor.** Es fácil equivocarse con los nombres: una fatiga de 5 significa «muy fresca», no «muy cansada», y lo mismo ocurre con el dolor muscular y el estrés.
+
+Cómo se ha comprobado:
+
+- La Figura 2 del artículo muestra las pantallas del cuestionario: fatiga va de 1 «muy cansada» a 5 «muy fresca», y calidad del sueño de 1 «insomnio» a 5 «sueño excelente». Las pantallas de dolor muscular, estrés y ánimo no aparecen en la figura.
+- Con los datos: las seis variables correlacionan en positivo con la readiness del mismo día (Spearman), también al comparar a cada jugadora consigo misma.
+
+| Variable | Correlación con readiness | Dentro de cada jugadora |
+|---|---|---|
+| Fatiga | +0,48 | +0,42 |
+| Dolor muscular | +0,36 | +0,31 |
+| Ánimo | +0,23 | +0,21 |
+| Calidad del sueño | +0,20 | +0,16 |
+| Estrés | +0,19 | +0,17 |
+| Horas de sueño | +0,18 | +0,10 |
+
+Además, cuanto mayor fue la carga del día anterior, más bajos salen hoy el dolor muscular (−0,18) y la fatiga (−0,11), lo que encaja con que un valor bajo signifique «peor».
 
 ### 2.2 Fase 1: tabla jugadora-día
 
