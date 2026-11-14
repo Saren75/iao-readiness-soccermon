@@ -1,0 +1,6 @@
+metodo,MAE,RMSE,R2
+Persistencia,0.7358,1.1937,0.3804
+Media de 7 días,0.6922,1.0269,0.5414
+Ridge,0.6940,0.9785,0.5837
+Random Forest,0.6732,0.9603,0.5990
+MLP,0.7148,0.9992,0.5658

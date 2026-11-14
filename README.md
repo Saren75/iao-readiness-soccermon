@@ -4,7 +4,7 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base, análisis exploratorio, baselines, características y un primer modelo (Ridge) hechos. Pendiente: Random Forest y MLP con ajuste de hiperparámetros, y explicabilidad.
+**Estado actual:** tabla base, análisis exploratorio, baselines, características y modelos (Ridge, Random Forest y MLP con ajuste de hiperparámetros) hechos. Pendiente: explicabilidad (SHAP), análisis de errores y extensión.
 
 ## Cómo ejecutarlo
 
@@ -18,6 +18,7 @@ python3 -m venv .venv
 .venv/bin/python src/features.py
 .venv/bin/python src/baselines.py
 .venv/bin/python src/modelo_ridge.py
+.venv/bin/python src/modelos.py      # tarda unos 5 minutos
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
@@ -30,7 +31,7 @@ En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
 src/                   código: carga.py, aed.py, features.py, validacion.py (particiones y métricas),
-                       baselines.py, modelo_ridge.py
+                       baselines.py, modelo_ridge.py, modelos.py
 notebooks/             experimentos
 reports/figures/       figuras para la memoria
 reports/tablas/        los números que hay detrás de cada figura
@@ -237,9 +238,25 @@ Decisiones:
 
 `src/modelo_ridge.py`. Es una regresión lineal con regularización: una suma ponderada de las características. Se entrena tres veces, añadiendo un bloque cada vez, para ver qué aporta cada uno. El relleno de vacíos y el escalado van dentro de un `Pipeline`, de modo que se ajustan solo con los datos de entrenamiento de cada partición. Aún sin ajuste de hiperparámetros (alpha = 1).
 
-### 2.8 Fases siguientes
+### 2.8 Modelos con ajuste de hiperparámetros
 
-Pendiente: Random Forest y MLP con ajuste de hiperparámetros dentro de la validación, y SHAP.
+`src/modelos.py` compara tres modelos sobre las 56 características:
+
+| Modelo | Qué es | Hiperparámetros que se ajustan |
+|---|---|---|
+| Ridge | Regresión lineal regularizada | Fuerza de la regularización (alpha): 0,1 · 1 · 10 · 100 · 1000 |
+| Random Forest | 300 árboles de decisión promediados | Mínimo de ejemplos por hoja: 5 · 20 · 50. Fracción de características por división: 0,33 · 1 |
+| MLP | Perceptrón multicapa (red de neuronas) | Capas ocultas: (16) · (32) · (64, 32). Regularización: 0,1 · 1 · 10. Tasa de aprendizaje: 0,001 · 0,01 |
+
+**Validación anidada.** Los hiperparámetros no se pueden elegir mirando el error de prueba, porque dejaría de ser honesto. Por eso hay dos niveles: las 5 particiones externas por jugadora miden el error, y dentro del entrenamiento de cada una se hace otra validación cruzada de 3 particiones, también por jugadora, para elegir la mejor combinación (la de menor MAE). Los datos de prueba no intervienen en la elección.
+
+**Reproducibilidad.** Semilla fija (0) en Random Forest y MLP. El MLP usa parada temprana: reserva un 10 % del entrenamiento y se detiene cuando deja de mejorar.
+
+**Un ajuste que hay que contar.** En una primera ejecución la regularización del MLP se probó con 0,001 y 0,1; se elegía casi siempre el valor más alto y el MLP quedaba por detrás (MAE 0,727). Se amplió la rejilla hacia arriba una vez y mejoró a 0,678. Con la rejilla actual sigue eligiendo siempre el valor más alto (10), así que podría quedar margen; no se ha ampliado más para no ajustar el diseño a los resultados de prueba.
+
+### 2.9 Fases siguientes
+
+Pendiente: SHAP, análisis de errores y extensión opcional.
 
 ## 3. Resultados
 
@@ -333,6 +350,65 @@ Dónde falla (MAE, validación por jugadoras):
 
 - **Ridge gana en los días normales y pierde en los malos.** Es el mejor cuando la readiness real está entre 5 y 7 y cuando hay cambio, pero el peor cuando es 4 o menos: tiende a predecir valores cercanos a la media.
 
+### 3.3 Modelos con ajuste de hiperparámetros
+
+![Modelos frente a las referencias](reports/figures/13_modelos_vs_baselines.png)
+
+Validación por jugadoras (media de 5 particiones ± desviación típica):
+
+| Método | MAE | RMSE | R² |
+|---|---|---|---|
+| Persistencia | 0,765 ± 0,111 | 1,231 ± 0,133 | 0,22 |
+| Media de 7 días | 0,711 ± 0,088 | 1,039 ± 0,103 | 0,45 |
+| Ridge | 0,688 ± 0,050 | 0,968 ± 0,081 | 0,52 |
+| Random Forest | 0,688 ± 0,046 | 0,959 ± 0,073 | 0,53 |
+| MLP | 0,678 ± 0,058 | 0,952 ± 0,089 | 0,54 |
+
+Comprobación temporal (entrenar con 2020, evaluar en 2021):
+
+| Método | MAE | RMSE | R² |
+|---|---|---|---|
+| Persistencia | 0,736 | 1,194 | 0,38 |
+| Media de 7 días | 0,692 | 1,027 | 0,54 |
+| Ridge | 0,694 | 0,979 | 0,58 |
+| Random Forest | 0,673 | 0,960 | 0,60 |
+| MLP | 0,715 | 0,999 | 0,57 |
+
+Comparaciones estadísticas (diferencia de MAE; negativa = gana el primero):
+
+| Comparación | Diferencia | t-test pareado (5 particiones) | Wilcoxon (50 jugadoras) | Jugadoras en que gana el primero |
+|---|---|---|---|---|
+| Ridge frente a media de 7 días | −0,022 | p = 0,40 | p < 0,001 | 38 de 50 |
+| Random Forest frente a media de 7 días | −0,023 | p = 0,34 | p = 0,004 | 36 de 50 |
+| MLP frente a media de 7 días | −0,032 | p = 0,20 | p = 0,001 | 35 de 50 |
+| Ridge frente a Random Forest | 0,000 | p = 0,96 | p = 0,38 | 23 de 50 |
+| Ridge frente a MLP | +0,010 | p = 0,26 | p = 0,46 | 23 de 50 |
+| Random Forest frente a MLP | +0,010 | p = 0,31 | p = 0,42 | 29 de 50 |
+
+Diferencias entre los tres modelos en conjunto: ANOVA sobre las particiones, p = 0,94; Friedman sobre las jugadoras, p = 0,57.
+
+Lectura:
+
+- **Los tres modelos mejoran al mejor baseline**, entre un 3 % y un 5 % en MAE y entre un 7 % y un 8 % en RMSE. Ganan en 35 a 38 de las 50 jugadoras y la prueba por jugadora es significativa. Con solo cinco particiones, el t-test no llega a serlo.
+- **No hay diferencias significativas entre los tres modelos.** Ni el ANOVA ni las comparaciones por pares las detectan. El MLP tiene el menor error en validación por jugadoras y Random Forest en la comprobación temporal.
+- **Un modelo lineal rinde igual que los no lineales.** Con estas entradas no hay ganancia apreciable por usar un modelo más complejo. A igualdad de resultados, Ridge es el más simple y el más fácil de explicar.
+- **En la comprobación temporal solo Random Forest mejora el MAE del baseline.** Ridge empata y el MLP queda por detrás en MAE, aunque los tres mejoran el RMSE.
+
+Hiperparámetros elegidos: Ridge alterna entre alpha 0,1 y 100 según la partición; Random Forest prefiere hojas de 20 ejemplos usando todas las características; el MLP elige siempre la regularización más alta (10) y la tasa de aprendizaje más baja. El detalle por partición está en `reports/tablas/modelos_hiperparametros.csv`.
+
+![Predicción media por nivel real](reports/figures/14_prediccion_por_nivel.png)
+
+| Método | Mañana = hoy | Mañana ≠ hoy | Readiness baja (1-4) | Media (5-7) | Alta (8-10) |
+|---|---|---|---|---|---|
+| Persistencia | 0,000 | 1,466 | 1,485 | 0,754 | 0,656 |
+| Media de 7 días | 0,387 | 1,008 | 1,580 | 0,633 | 0,696 |
+| Ridge | 0,417 | 0,938 | 1,765 | 0,580 | 0,693 |
+| Random Forest | 0,450 | 0,907 | 1,826 | 0,561 | 0,715 |
+| MLP | 0,407 | 0,927 | 1,594 | 0,580 | 0,694 |
+
+- **Los modelos se quedan cortos en los extremos.** Cuando la readiness real es 1 o 2, predicen de media entre 4 y 5; cuando es 10, predicen 8. Aciertan mejor en la zona central, donde está casi todo el dato.
+- **Ningún modelo mejora a la persistencia en los días malos** (readiness de 4 o menos). Son el 6 % de los ejemplos y es el punto más débil del sistema.
+
 ## 4. Análisis y discusión
 
 Limitaciones conocidas hasta ahora:
@@ -342,7 +418,9 @@ Limitaciones conocidas hasta ahora:
 - **Pequeñas incoherencias en el origen.** En 110 de 14.197 días con sesión, la carga diaria del dataset no coincide con la suma de sus sesiones; hay 76 sesiones repetidas; el strain no se reproduce exactamente con la fórmula habitual.
 - **Respuestas repetidas.** Algunas jugadoras contestan el mismo valor durante semanas, lo que favorece a la persistencia.
 - **Cuestionarios con retraso.** La aplicación permite contestar por días anteriores, así que parte de las respuestas pueden ser de memoria.
-- **Pocos días malos.** Solo el 3,5 % de las respuestas es 3 o menos.
+- **Pocos días malos, y mal predichos.** Solo el 3,5 % de las respuestas es 3 o menos, y ahí ningún modelo mejora a la persistencia.
+- **Mejora modesta sobre el mejor baseline**, significativa por jugadora pero no con el t-test sobre cinco particiones.
+- **Rejilla del MLP en el límite.** Elige siempre la regularización más alta probada.
 - **Datos subjetivos** de solo dos equipos femeninos de una liga.
 
 ## 5. Conclusiones
