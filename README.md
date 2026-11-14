@@ -4,7 +4,7 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base (fase 1) y análisis exploratorio (fase 2) hechos. Pendiente: baselines, características, modelos y explicabilidad.
+**Estado actual:** tabla base, análisis exploratorio y baselines hechos. Pendiente: características, modelos y explicabilidad.
 
 ## Cómo ejecutarlo
 
@@ -15,18 +15,19 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python src/carga.py
 .venv/bin/python src/aed.py
+.venv/bin/python src/baselines.py
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 
-`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`.
+`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`. `baselines.py` evalúa las referencias.
 
 ## Estructura
 
 ```
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
 data/processed/        tablas generadas por el código
-src/                   código: carga.py (fase 1), aed.py (fase 2)
+src/                   código: carga.py, aed.py, validacion.py (particiones y métricas), baselines.py
 notebooks/             experimentos
 reports/figures/       figuras para la memoria
 reports/tablas/        los números que hay detrás de cada figura
@@ -189,21 +190,70 @@ Decisiones y su justificación:
 - **Quitar entradas duplicadas** (carga semanal o ATL, una de las dos CTL) o justificar por qué se dejan.
 - **Esperar una mejora moderada sobre la persistencia** y analizarla por jugadora, no solo en media.
 
-### 2.4 Fases siguientes
+### 2.4 Esquema de validación
 
-Pendiente: baselines dentro del esquema de validación, objetivo y características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y validación.
+`src/validacion.py` contiene lo que comparten baselines y modelos, para que todo se evalúe igual: los mismos ejemplos, las mismas particiones y las mismas métricas.
+
+- **Ejemplos.** Un ejemplo es un día t de una jugadora en el que se conoce su readiness y la del día siguiente: 14.631 ejemplos de 50 jugadoras.
+- **Validación principal: por jugadoras.** Validación cruzada de 5 particiones en la que todas las filas de una jugadora caen en la misma partición (`GroupKFold`). Cada partición evalúa 10 jugadoras que no se han visto al entrenar, con unos 2.900 ejemplos. Sin esto el modelo podría reconocer a la jugadora y el error saldría optimista.
+- **Comprobación temporal.** Entrenar con la temporada 2020 (6.231 ejemplos) y evaluar en la 2021 (8.400).
+- **Métricas.** MAE (error medio en puntos de readiness), RMSE (castiga más los errores grandes) y R² como apoyo.
+
+### 2.5 Baselines
+
+Un baseline es una forma de predecir tan simple que no necesita aprendizaje automático. Si un modelo no lo mejora, no aporta nada. `src/baselines.py` evalúa cuatro:
+
+| Baseline | Qué predice para mañana |
+|---|---|
+| Media global | La media de la readiness en los datos de entrenamiento |
+| Media propia | La media de todos los cuestionarios de esa jugadora hasta hoy |
+| Media de 7 días | La media de sus últimos 7 días (con los que haya) |
+| Persistencia | Lo mismo que hoy |
+
+Los tres últimos solo usan el pasado de la propia jugadora, así que sirven también para una jugadora nueva.
+
+### 2.6 Fases siguientes
+
+Pendiente: características (desfases de 1 y 2 días, ventanas de 3 y 7 días), modelos y explicabilidad.
 
 ## 3. Resultados
 
-Referencias preliminares, calculadas sobre los 14.631 pares de días consecutivos (pendiente de repetirlas dentro del esquema de validación):
+### 3.1 Baselines
 
-| Baseline | MAE | RMSE |
-|---|---|---|
-| Persistencia (mañana = hoy) | 0,765 | 1,237 |
-| Media de la jugadora (orientativo: usa todos sus datos) | 0,852 | 1,171 |
-| Media global | 1,130 | 1,463 |
+![Baselines](reports/figures/10_baselines.png)
 
-La readiness no cambia de un día al siguiente en el 47,8 % de los casos.
+Validación por jugadoras (media de 5 particiones ± desviación típica):
+
+| Baseline | MAE | RMSE | R² |
+|---|---|---|---|
+| Media global | 1,139 ± 0,100 | 1,469 ± 0,145 | −0,05 |
+| Media propia | 0,843 ± 0,036 | 1,182 ± 0,063 | 0,31 |
+| Persistencia | 0,765 ± 0,111 | 1,231 ± 0,133 | 0,22 |
+| **Media de 7 días** | **0,711 ± 0,088** | **1,039 ± 0,103** | **0,45** |
+
+Comprobación temporal (entrenar con 2020, evaluar en 2021):
+
+| Baseline | MAE | RMSE | R² |
+|---|---|---|---|
+| Media global | 1,141 | 1,517 | 0,00 |
+| Media propia | 0,855 | 1,220 | 0,35 |
+| Persistencia | 0,736 | 1,194 | 0,38 |
+| **Media de 7 días** | **0,692** | **1,027** | **0,54** |
+
+**La referencia a batir es la media de 7 días**, no la persistencia: gana en las dos métricas y en los dos esquemas. Un modelo tendrá que bajar de MAE 0,711 y RMSE 1,039.
+
+Dónde falla cada uno (MAE, validación por jugadoras):
+
+| Baseline | Mañana = hoy | Mañana ≠ hoy | Readiness baja (1-4) | Media (5-7) | Alta (8-10) |
+|---|---|---|---|---|---|
+| Media global | 1,105 | 1,171 | 3,614 | 0,678 | 1,532 |
+| Media propia | 0,672 | 0,999 | 2,720 | 0,674 | 0,814 |
+| Media de 7 días | 0,387 | 1,008 | 1,580 | 0,633 | 0,696 |
+| Persistencia | 0,000 | 1,466 | 1,485 | 0,754 | 0,656 |
+
+- **La persistencia acierta siempre que no hay cambio y falla mucho cuando lo hay** (1,47 puntos de media). Promediar 7 días reparte mejor el error.
+- **Todos fallan más en los días malos.** Cuando la readiness real es de 4 o menos, el mejor baseline se equivoca en 1,5 puntos. Son pocos días, pero son los que más interesaría anticipar.
+- **No hay un baseline que gane para todas las jugadoras.** La media de 7 días es la mejor en 19, la persistencia en 14, la media propia en 11 y la media global en 6.
 
 ## 4. Análisis y discusión
 

@@ -1,0 +1,21 @@
+particion,baseline,n_prueba,jugadoras_prueba,MAE,RMSE,R2
+particion_1,Media global,2923,10,1.2906,1.7076,-0.0003
+particion_1,Media propia,2923,10,0.8666,1.2162,0.4926
+particion_1,Media de 7 días,2923,10,0.6002,0.8877,0.7297
+particion_1,Persistencia,2923,10,0.6363,1.0541,0.6188
+particion_2,Media global,2907,10,1.0610,1.3534,-0.0049
+particion_2,Media propia,2907,10,0.8340,1.1225,0.3088
+particion_2,Media de 7 días,2907,10,0.6587,0.9858,0.4669
+particion_2,Persistencia,2907,10,0.6791,1.1633,0.2576
+particion_3,Media global,2916,10,1.1911,1.4921,-0.0258
+particion_3,Media propia,2916,10,0.8474,1.2604,0.2680
+particion_3,Media de 7 días,2916,10,0.7025,1.0998,0.4427
+particion_3,Persistencia,2916,10,0.7846,1.3266,0.1890
+particion_4,Media global,2942,10,1.0677,1.3583,-0.0849
+particion_4,Media propia,2942,10,0.8798,1.2003,0.1528
+particion_4,Media de 7 días,2942,10,0.8199,1.1483,0.2246
+particion_4,Persistencia,2942,10,0.9160,1.3918,-0.1390
+particion_5,Media global,2943,10,1.0862,1.4335,-0.1340
+particion_5,Media propia,2943,10,0.7871,1.1119,0.3177
+particion_5,Media de 7 días,2943,10,0.7722,1.0750,0.3622
+particion_5,Persistencia,2943,10,0.8073,1.2213,0.1768
