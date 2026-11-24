@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="12.1.001">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="12.1.001" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="12.1.001" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/data/processed/Jugadora_dia"/>
+      </operator>
+      <operator activated="true" class="python_scripting:execute_python" compatibility="11.0.006" expanded="true" height="103" name="Execute features.py" width="90" x="179" y="34">
+        <parameter key="script" value="import pandas as pd&#10;&#10;# The rm_main function is mandatory.&#10;# The number of arguments must match the number of input ports (can be none),&#10;# or the number of input ports plus one if the &quot;use macros&quot; parameter is set.&#10;#&#10;# If you want to use macros, uncomment the following line and check the &quot;use macros&quot; parameter:&#10;# def rm_main(data, macros):&#10;def rm_main(data):&#10;    # Print a greeting message (output can be found in the Log View)&#10;    print('Hello, world!')&#10;&#10;    # Display the type of the input data&#10;    print(f&quot;Type of input data: {type(data)}&quot;)&#10;&#10;    # Access the data (display first few rows)&#10;    print(&quot;Input data preview:&quot;)&#10;    print(data.head())&#10;&#10;    # Create an additional DataFrame to output&#10;    data2 = pd.DataFrame({'values': [3, 5, 77, 8]})&#10;&#10;    # Return the results&#10;    # Connect two output ports to receive 'data' and 'data2'&#10;    return data, data2"/>
+        <parameter key="script_file" value="/home/v1adi/UC3M/IA_en_las_Orgs/Proyecto/Grupo10_SoccerMon/src/features.py"/>
+        <parameter key="notebook_cell_tag_filter" value=""/>
+        <parameter key="use_default_python" value="true"/>
+        <parameter key="package_manager" value="conda (anaconda)"/>
+        <parameter key="use_macros" value="false"/>
+      </operator>
+      <operator activated="true" class="blending:set_role" compatibility="12.1.001" expanded="true" height="82" name="Set Role" width="90" x="313" y="34">
+        <list key="set_roles">
+          <parameter key="readiness_manana" value="label"/>
+          <parameter key="jugadora" value="batch"/>
+          <parameter key="equipo" value="metadata"/>
+          <parameter key="temporada" value="metadata"/>
+          <parameter key="fecha" value="metadata"/>
+        </list>
+      </operator>
+      <operator activated="true" class="store" compatibility="12.1.001" expanded="true" height="68" name="Store" width="90" x="447" y="34">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/data/processed/ejemplos"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Execute features.py" to_port="input 1"/>
+      <connect from_op="Execute features.py" from_port="output 1" to_op="Set Role" to_port="example set input"/>
+      <connect from_op="Set Role" from_port="example set output" to_op="Store" to_port="input"/>
+      <connect from_op="Store" from_port="through" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

@@ -16,7 +16,7 @@ Los tres últimos solo usan el pasado de la propia jugadora, así que valen
 también para una jugadora que el sistema no ha visto nunca.
 
 Uso (desde la carpeta "Practica final"):
-    .venv/bin/python src/baselines.py
+    .venv/bin/python comprobacion/baselines.py
 """
 
 import matplotlib

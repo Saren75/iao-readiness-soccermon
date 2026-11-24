@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="12.1.001">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="12.1.001" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="12.1.001" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/models/pesos_rf_2020"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="12.1.001" expanded="true" height="68" name="Retrieve (Datos)" width="90" x="45" y="238">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/data/processed/ejemplos"/>
+      </operator>
+      <operator activated="true" class="filter_examples" compatibility="12.1.001" expanded="true" height="103" name="Filter temp=2021" width="90" x="179" y="238">
+        <parameter key="parameter_expression" value=""/>
+        <parameter key="condition_class" value="custom_filters"/>
+        <parameter key="invert_filter" value="false"/>
+        <list key="filters_list">
+          <parameter key="filters_entry_key" value="temporada.eq.2021"/>
+        </list>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="12.1.001" expanded="true" height="68" name="Retrieve Pipeline" width="90" x="45" y="136">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/models/pipeline_rf_2020"/>
+      </operator>
+      <operator activated="true" class="blending:set_role" compatibility="12.1.001" expanded="true" height="82" name="Set Role" width="90" x="313" y="238">
+        <list key="set_roles">
+          <parameter key="readiness_manana" value="label"/>
+        </list>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="12.1.001" expanded="true" height="82" name="Apply Model" width="90" x="447" y="136">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="12.1.001" expanded="true" height="82" name="Generate Attributes" width="90" x="581" y="136">
+        <list key="function_descriptions">
+          <parameter key="error_abs" value="abs(readiness_manana - [prediction(readiness_manana)])"/>
+          <parameter key="zona_readiness" value="if(readiness_manana &lt;= 4, &quot;1_Baja (1-4)&quot;, if(readiness_manana &lt;= 7, &quot;2_Media (5-7)&quot;, &quot;3_Alta (8-10)&quot;))"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Europe/Madrid"/>
+      </operator>
+      <operator activated="true" class="multiply" compatibility="12.1.001" expanded="true" height="103" name="Multiply" width="90" x="715" y="136"/>
+      <operator activated="true" class="aggregate" compatibility="12.1.001" expanded="true" height="82" name="Aggregate (Por Zona)" width="90" x="849" y="187">
+        <parameter key="use_default_aggregation" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default_aggregation_function" value="average"/>
+        <list key="aggregation_attributes">
+          <parameter key="error_abs" value="average"/>
+          <parameter key="error_abs" value="count"/>
+        </list>
+        <parameter key="group_by_attributes" value="zona_readiness"/>
+        <parameter key="count_all_combinations" value="false"/>
+        <parameter key="only_distinct" value="false"/>
+        <parameter key="ignore_missings" value="true"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_port="result 1"/>
+      <connect from_op="Retrieve (Datos)" from_port="output" to_op="Filter temp=2021" to_port="example set input"/>
+      <connect from_op="Filter temp=2021" from_port="example set output" to_op="Set Role" to_port="example set input"/>
+      <connect from_op="Retrieve Pipeline" from_port="output" to_op="Apply Model" to_port="model"/>
+      <connect from_op="Set Role" from_port="example set output" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Generate Attributes" to_port="table input"/>
+      <connect from_op="Generate Attributes" from_port="table output" to_op="Multiply" to_port="input"/>
+      <connect from_op="Multiply" from_port="output 1" to_port="result 2"/>
+      <connect from_op="Multiply" from_port="output 2" to_op="Aggregate (Por Zona)" to_port="example set input"/>
+      <connect from_op="Aggregate (Por Zona)" from_port="example set output" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+    </process>
+  </operator>
+</process>

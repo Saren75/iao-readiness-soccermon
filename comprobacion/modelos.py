@@ -16,7 +16,7 @@ ese error dejaría de ser honesto. Por eso hay dos niveles:
     elegir la mejor combinación. Los datos de prueba no intervienen.
 
 Uso (desde la carpeta "Practica final"); tarda unos minutos:
-    .venv/bin/python src/modelos.py
+    .venv/bin/python comprobacion/modelos.py
 """
 
 import os

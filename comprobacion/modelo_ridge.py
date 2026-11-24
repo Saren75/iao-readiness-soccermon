@@ -17,7 +17,7 @@ garantiza el Pipeline de scikit-learn.
 Todavía no se ajustan hiperparámetros (alpha = 1, el valor por defecto).
 
 Uso (desde la carpeta "Practica final"):
-    .venv/bin/python src/modelo_ridge.py
+    .venv/bin/python comprobacion/modelo_ridge.py
 """
 
 import warnings

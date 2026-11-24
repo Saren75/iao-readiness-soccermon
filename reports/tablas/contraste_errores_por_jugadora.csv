@@ -1,0 +1,201 @@
+jugadora,metodo,n,MAE,RMSE
+A01,Persistencia,342,0.9240,1.3744
+A01,Media de 7 días,342,0.8529,1.1661
+A01,Ridge,342,0.7790,1.0907
+A01,Random Forest,342,0.7372,1.0247
+A02,Persistencia,584,0.7928,1.1564
+A02,Media de 7 días,584,0.6913,0.9075
+A02,Ridge,584,0.6197,0.8125
+A02,Random Forest,584,0.5848,0.7889
+A03,Persistencia,633,0.4423,0.9168
+A03,Media de 7 días,633,0.4499,0.7209
+A03,Ridge,633,0.5195,0.7584
+A03,Random Forest,633,0.4861,0.7697
+A04,Persistencia,639,0.4147,0.7722
+A04,Media de 7 días,639,0.3738,0.6228
+A04,Ridge,639,0.6857,0.8542
+A04,Random Forest,639,0.7191,0.8984
+A05,Persistencia,328,0.6646,0.9627
+A05,Media de 7 días,328,0.5888,0.7558
+A05,Ridge,328,0.5384,0.6912
+A05,Random Forest,328,0.5623,0.7500
+A06,Persistencia,525,0.6838,1.1204
+A06,Media de 7 días,525,0.6834,0.9476
+A06,Ridge,525,0.6218,0.8594
+A06,Random Forest,525,0.6299,0.8542
+A07,Persistencia,615,0.9707,1.3951
+A07,Media de 7 días,615,0.9377,1.2356
+A07,Ridge,615,0.8154,1.0551
+A07,Random Forest,615,0.7484,0.9648
+A08,Persistencia,221,0.6018,0.9345
+A08,Media de 7 días,221,0.5645,0.7642
+A08,Ridge,221,0.5700,0.7584
+A08,Random Forest,221,0.5132,0.7283
+A09,Persistencia,438,0.6142,0.9781
+A09,Media de 7 días,438,0.6425,0.8495
+A09,Ridge,438,0.5950,0.7691
+A09,Random Forest,438,0.5587,0.7588
+A10,Persistencia,161,1.5404,2.0822
+A10,Media de 7 días,161,1.3465,1.7986
+A10,Ridge,161,1.2065,1.6408
+A10,Random Forest,161,1.2079,1.5966
+A11,Persistencia,292,1.2603,1.6941
+A11,Media de 7 días,292,1.0800,1.4129
+A11,Ridge,292,0.9784,1.2613
+A11,Random Forest,292,0.9197,1.2245
+A12,Persistencia,614,0.8046,1.2569
+A12,Media de 7 días,614,0.8190,1.1769
+A12,Ridge,614,0.7325,1.0652
+A12,Random Forest,614,0.7575,1.0584
+A13,Persistencia,187,0.9412,1.3404
+A13,Media de 7 días,187,0.9056,1.2860
+A13,Ridge,187,0.8609,1.2177
+A13,Random Forest,187,0.7911,1.2093
+A14,Persistencia,549,0.5829,0.9074
+A14,Media de 7 días,549,0.6053,0.8477
+A14,Ridge,549,0.5372,0.7526
+A14,Random Forest,549,0.6111,0.7991
+A15,Persistencia,276,0.8442,1.2868
+A15,Media de 7 días,276,0.8305,1.1410
+A15,Ridge,276,0.7606,1.0511
+A15,Random Forest,276,0.7452,1.0581
+A16,Persistencia,412,0.6214,0.9754
+A16,Media de 7 días,412,0.5531,0.7674
+A16,Ridge,412,0.5236,0.7155
+A16,Random Forest,412,0.5463,0.7397
+A17,Persistencia,429,1.0420,1.4604
+A17,Media de 7 días,429,0.9599,1.2806
+A17,Ridge,429,0.9132,1.2104
+A17,Random Forest,429,0.9034,1.2149
+A18,Persistencia,237,0.4515,0.7547
+A18,Media de 7 días,237,0.5135,0.6897
+A18,Ridge,237,0.5108,0.6471
+A18,Random Forest,237,0.4880,0.6454
+A19,Persistencia,400,0.8850,1.2207
+A19,Media de 7 días,400,0.7388,0.9710
+A19,Ridge,400,0.6913,0.9008
+A19,Random Forest,400,0.6591,0.8934
+A20,Persistencia,274,1.7993,2.3514
+A20,Media de 7 días,274,1.3877,1.7663
+A20,Ridge,274,1.2652,1.6012
+A20,Random Forest,274,1.2197,1.5512
+A21,Persistencia,342,0.9123,1.3615
+A21,Media de 7 días,342,0.8270,1.1194
+A21,Ridge,342,0.6954,0.9696
+A21,Random Forest,342,0.6080,0.8871
+A22,Persistencia,341,1.2874,1.6875
+A22,Media de 7 días,341,1.0417,1.2895
+A22,Ridge,341,1.1077,1.3604
+A22,Random Forest,341,1.0567,1.3180
+A23,Persistencia,266,0.7519,1.1471
+A23,Media de 7 días,266,0.6991,0.9453
+A23,Ridge,266,0.6389,0.8704
+A23,Random Forest,266,0.6254,0.8523
+A24,Persistencia,228,0.6272,1.0617
+A24,Media de 7 días,228,0.5371,0.8058
+A24,Ridge,228,0.5163,0.7102
+A24,Random Forest,228,0.6291,0.7348
+A25,Persistencia,114,0.9561,1.4600
+A25,Media de 7 días,114,1.1654,1.5904
+A25,Ridge,114,1.0052,1.3665
+A25,Random Forest,114,0.9203,1.3135
+A26,Persistencia,187,0.8930,1.4386
+A26,Media de 7 días,187,0.9970,1.4312
+A26,Ridge,187,0.8378,1.2422
+A26,Random Forest,187,0.8905,1.3270
+A27,Persistencia,88,1.5682,2.1532
+A27,Media de 7 días,88,1.3865,1.8174
+A27,Ridge,88,1.1844,1.5887
+A27,Random Forest,88,1.1104,1.4286
+B01,Persistencia,409,0.9878,1.4211
+B01,Media de 7 días,409,0.8403,1.1339
+B01,Ridge,409,0.7179,1.0038
+B01,Random Forest,409,0.7140,0.9724
+B02,Persistencia,72,1.3056,1.7873
+B02,Media de 7 días,72,1.2678,1.6198
+B02,Ridge,72,1.1699,1.4943
+B02,Random Forest,72,1.1303,1.4310
+B03,Persistencia,516,0.1008,0.5392
+B03,Media de 7 días,516,0.1200,0.5337
+B03,Ridge,516,0.3480,0.6473
+B03,Random Forest,516,0.3191,0.6053
+B04,Persistencia,101,0.8416,1.2547
+B04,Media de 7 días,101,0.7511,1.0725
+B04,Ridge,101,0.6413,0.9767
+B04,Random Forest,101,0.6608,0.9748
+B05,Persistencia,482,0.5892,0.9467
+B05,Media de 7 días,482,0.5682,0.8310
+B05,Ridge,482,0.5331,0.7603
+B05,Random Forest,482,0.5413,0.7650
+B06,Persistencia,485,0.5670,0.9600
+B06,Media de 7 días,485,0.5672,0.8198
+B06,Ridge,485,0.5828,0.7651
+B06,Random Forest,485,0.5888,0.7699
+B07,Persistencia,404,0.7970,1.1731
+B07,Media de 7 días,404,0.7745,1.0302
+B07,Ridge,404,0.6969,0.9189
+B07,Random Forest,404,0.7000,0.9357
+B08,Persistencia,75,0.7733,1.4697
+B08,Media de 7 días,75,0.7529,1.1326
+B08,Ridge,75,0.7111,1.0859
+B08,Random Forest,75,0.6431,1.0603
+B09,Persistencia,74,0.9459,1.2520
+B09,Media de 7 días,74,0.8473,1.1563
+B09,Ridge,74,0.8108,1.0789
+B09,Random Forest,74,0.8135,1.0204
+B10,Persistencia,387,0.3618,0.7676
+B10,Media de 7 días,387,0.3200,0.6392
+B10,Ridge,387,0.4826,0.6975
+B10,Random Forest,387,0.4591,0.6902
+B11,Persistencia,493,0.4057,0.7878
+B11,Media de 7 días,493,0.4410,0.7157
+B11,Ridge,493,0.4120,0.6164
+B11,Random Forest,493,0.4652,0.6851
+B12,Persistencia,197,1.8223,2.5340
+B12,Media de 7 días,197,1.4768,1.9675
+B12,Ridge,197,1.3719,1.7995
+B12,Random Forest,197,1.3563,1.7340
+B13,Persistencia,136,1.0368,1.7678
+B13,Media de 7 días,136,0.8743,1.3698
+B13,Ridge,136,0.9000,1.3226
+B13,Random Forest,136,0.8007,1.2339
+B14,Persistencia,5,0.6000,1.0000
+B14,Media de 7 días,5,0.7333,1.0000
+B14,Ridge,5,0.7989,0.8673
+B14,Random Forest,5,1.0243,1.0344
+B15,Persistencia,362,0.6989,1.0810
+B15,Media de 7 días,362,0.7128,0.9913
+B15,Ridge,362,0.7048,0.9466
+B15,Random Forest,362,0.7765,0.9954
+B16,Persistencia,29,1.1724,1.7019
+B16,Media de 7 días,29,1.0621,1.4303
+B16,Ridge,29,0.9914,1.3122
+B16,Random Forest,29,0.9596,1.3461
+B17,Persistencia,88,0.4886,0.7761
+B17,Media de 7 días,88,0.4867,0.6817
+B17,Ridge,88,0.5257,0.6713
+B17,Random Forest,88,0.5519,0.7016
+B18,Persistencia,303,0.8614,1.2361
+B18,Media de 7 días,303,0.7156,0.9382
+B18,Ridge,303,0.6483,0.8693
+B18,Random Forest,303,0.6773,0.9179
+B19,Persistencia,54,0.2037,0.4907
+B19,Media de 7 días,54,0.2309,0.4618
+B19,Ridge,54,0.3640,0.4622
+B19,Random Forest,54,0.3840,0.5063
+B20,Persistencia,21,0.8571,1.1952
+B20,Media de 7 días,21,0.7698,0.9574
+B20,Ridge,21,0.7810,0.9700
+B20,Random Forest,21,0.7146,0.9019
+B21,Persistencia,51,1.3333,1.8150
+B21,Media de 7 días,51,1.3591,1.6682
+B21,Ridge,51,1.0858,1.4061
+B21,Random Forest,51,1.1445,1.4225
+B22,Persistencia,94,0.5319,0.8379
+B22,Media de 7 días,94,0.4974,0.6658
+B22,Ridge,94,0.4297,0.5867
+B22,Random Forest,94,0.4228,0.6397
+B23,Persistencia,71,0.9014,1.3531
+B23,Media de 7 días,71,0.7894,1.1117
+B23,Ridge,71,0.7204,1.0017
+B23,Random Forest,71,0.7066,0.9852

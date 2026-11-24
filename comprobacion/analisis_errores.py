@@ -15,7 +15,7 @@ Se analiza Random Forest (el modelo explicado con SHAP) frente al mejor
 baseline (media de 7 días).
 
 Uso (desde la carpeta "Practica final"), después de modelos.py:
-    .venv/bin/python src/analisis_errores.py
+    .venv/bin/python comprobacion/analisis_errores.py
 """
 
 import matplotlib

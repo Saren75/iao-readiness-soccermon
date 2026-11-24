@@ -4,11 +4,34 @@ Práctica final de Inteligencia Artificial en las Organizaciones (UC3M, curso 20
 
 Este README hace de cuaderno de trabajo: sigue los apartados de la memoria y se actualiza en cada paso, para que al final redactarla sea pasar esto a limpio.
 
-**Estado actual:** tabla base, análisis exploratorio, baselines, características y modelos (Ridge, Random Forest y MLP con ajuste de hiperparámetros) hechos, con explicabilidad (SHAP) y análisis de errores. Pendiente: extensión opcional y redacción de la memoria.
+**Estado actual:** tabla base, análisis exploratorio, referencias, modelos (en Altair AI Studio), explicabilidad con SHAP y contraste por jugadora hechos. Pendiente: recalcular la persistencia y añadir el ajuste de hiperparámetros en Altair, tratar las notas repetidas, los ceros de carga y las variables redundantes, y redactar la memoria. Extensión con lógica difusa solo si da tiempo.
+
+## Reparto entre Altair AI Studio y Python
+
+Cada paso se hace en una sola herramienta:
+
+| Paso | Herramienta | Dónde |
+|---|---|---|
+| Construir la tabla jugadora-día | Python, ejecutado desde Altair | `src/carga.py` · proceso `01_Ingesta_y_Limpieza` |
+| Análisis exploratorio | Python | `src/aed.py` |
+| Construir las 56 características | Python, ejecutado desde Altair | `src/features.py` · proceso `03_Ingenieria_Caracteristicas` |
+| Referencias, modelos (Ridge, Random Forest, red neuronal), validación por jugadoras, ANOVA y t-test | Altair | proceso `04_Baselines_y_Modelado` |
+| Validación temporal 2020 → 2021 | Altair | proceso `05_Validacion_Temporal_2020_2021` |
+| Error por franja de readiness | Altair | proceso `06_Explicabilidad_y_Errores` |
+| Contraste pareado por jugadora (Wilcoxon) | Python | `src/contraste_jugadoras.py` |
+| Explicabilidad con SHAP | Python | `src/explicabilidad.py` |
+
+Altair no tiene SHAP ni la prueba de Wilcoxon, así que esos dos pasos se hacen en Python con modelos **configurados igual que en Altair** (`src/modelo_altair.py`). `contraste_jugadoras.py` comprueba que esos modelos dan los mismos errores que Altair.
+
+La guía de los procesos de Altair está en [`ALTAIR.md`](ALTAIR.md).
+
+La carpeta `comprobacion/` guarda la versión anterior, hecha entera en Python: referencias, modelos con ajuste de hiperparámetros, análisis de errores y SHAP. No forma parte del flujo principal; sirve para comprobar que los resultados no dependen de la herramienta (apartados 2.7, 2.8, 3.2, 3.3 y 3.6).
 
 ## Cómo ejecutarlo
 
-Hace falta Python 3.11 o superior.
+**En Altair AI Studio:** seguir [`ALTAIR.md`](ALTAIR.md).
+
+**En Python** (hace falta Python 3.11 o superior):
 
 ```bash
 python3 -m venv .venv
@@ -16,26 +39,32 @@ python3 -m venv .venv
 .venv/bin/python src/carga.py
 .venv/bin/python src/aed.py
 .venv/bin/python src/features.py
-.venv/bin/python src/baselines.py
-.venv/bin/python src/modelo_ridge.py
-.venv/bin/python src/modelos.py            # tarda unos 5 minutos
-.venv/bin/python src/explicabilidad.py     # tarda 1 minuto
-.venv/bin/python src/analisis_errores.py
+.venv/bin/python src/contraste_jugadoras.py   # tarda un minuto
+.venv/bin/python src/explicabilidad.py
 ```
 
 En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 
-`carga.py` regenera `data/processed/jugadora_dia.csv` a partir de los datos crudos. `aed.py` regenera las figuras de `reports/figures/` y las tablas de `reports/tablas/`. `features.py` genera `data/processed/ejemplos.csv`, `baselines.py` evalúa las referencias y `modelo_ridge.py` el primer modelo.
+- `carga.py` genera `data/processed/jugadora_dia.csv` a partir de los datos crudos.
+- `aed.py` genera las figuras 01 a 09 y sus tablas.
+- `features.py` genera `data/processed/ejemplos.csv`.
+- `contraste_jugadoras.py` repite la validación por jugadoras de Altair y hace la prueba de Wilcoxon.
+- `explicabilidad.py` calcula SHAP y genera las figuras 15 a 18.
+
+Comprobación en Python (opcional): `.venv/bin/python comprobacion/baselines.py`, `comprobacion/modelos.py` (unos 5 minutos), `comprobacion/analisis_errores.py`.
 
 ## Estructura
 
 ```
 data/raw/subjective/   datos originales de SoccerMon (parte subjetiva), sin modificar
-data/processed/        tablas generadas por el código
-src/                   código: carga.py, aed.py, features.py, validacion.py (particiones y métricas),
-                       baselines.py, modelo_ridge.py, modelos.py, explicabilidad.py, analisis_errores.py
-notebooks/             experimentos
-reports/figures/       figuras para la memoria
+data/processed/        tablas generadas: .csv (Python) y .rmhdf5table (Altair)
+processes/             procesos de Altair AI Studio (01 a 06)
+models/                modelos guardados por Altair
+src/                   Python del proyecto: carga.py, features.py, aed.py,
+                       modelo_altair.py, contraste_jugadoras.py, explicabilidad.py
+comprobacion/          versión anterior hecha entera en Python
+reports/figures/       figuras de Python para la memoria
+reports/altair/        figuras exportadas desde Altair
 reports/tablas/        los números que hay detrás de cada figura
 ```
 
@@ -198,7 +227,7 @@ Decisiones y su justificación:
 
 ### 2.4 Esquema de validación
 
-`src/validacion.py` contiene lo que comparten baselines y modelos, para que todo se evalúe igual: los mismos ejemplos, las mismas particiones y las mismas métricas.
+En la versión Python, `comprobacion/validacion.py` contiene lo que comparten referencias y modelos, para que todo se evalúe igual: los mismos ejemplos, las mismas particiones y las mismas métricas. En Altair, la validación por jugadoras usa una partición por jugadora (`split on batch attribute`), y `src/contraste_jugadoras.py` la reproduce en Python.
 
 - **Ejemplos.** Un ejemplo es un día t de una jugadora en el que se conoce su readiness y la del día siguiente: 14.631 ejemplos de 50 jugadoras.
 - **Validación principal: por jugadoras.** Validación cruzada de 5 particiones en la que todas las filas de una jugadora caen en la misma partición (`GroupKFold`). Cada partición evalúa 10 jugadoras que no se han visto al entrenar, con unos 2.900 ejemplos. Sin esto el modelo podría reconocer a la jugadora y el error saldría optimista.
@@ -207,7 +236,7 @@ Decisiones y su justificación:
 
 ### 2.5 Baselines
 
-Un baseline es una forma de predecir tan simple que no necesita aprendizaje automático. Si un modelo no lo mejora, no aporta nada. `src/baselines.py` evalúa cuatro:
+Un baseline es una forma de predecir tan simple que no necesita aprendizaje automático. Si un modelo no lo mejora, no aporta nada. `comprobacion/baselines.py` evalúa cuatro:
 
 | Baseline | Qué predice para mañana |
 |---|---|
@@ -220,7 +249,7 @@ Los tres últimos solo usan el pasado de la propia jugadora, así que sirven tam
 
 ### 2.6 Objetivo y características
 
-`src/features.py` convierte la tabla jugadora-día en ejemplos para aprendizaje supervisado y los guarda en `data/processed/ejemplos.csv` (14.631 filas, 56 características). Todas las características usan solo información de días anteriores o iguales a t.
+`src/features.py` convierte la tabla jugadora-día en ejemplos para aprendizaje supervisado y los guarda en `data/processed/ejemplos.csv` (14.631 filas, 56 características). Todas las características usan solo información de días anteriores o iguales a t. Es el mismo script que ejecuta Altair en el proceso 03; las columnas tienen nombres descriptivos (`readiness_media_7d`, `carga_hoy`…) y el objetivo es `readiness_manana`.
 
 | Bloque | Nº | Contenido |
 |---|---|---|
@@ -236,13 +265,19 @@ Decisiones:
 - **Se quitan las métricas de carga duplicadas**: carga semanal (es ATL por 7), CTL de 42 días y minutos entrenados.
 - **Los baselines y los modelos usan exactamente las mismas 14.631 filas.**
 
-### 2.7 Primer modelo: regresión Ridge
+### 2.7 Comprobación en Python: primer modelo (Ridge)
 
-`src/modelo_ridge.py`. Es una regresión lineal con regularización: una suma ponderada de las características. Se entrena tres veces, añadiendo un bloque cada vez, para ver qué aporta cada uno. El relleno de vacíos y el escalado van dentro de un `Pipeline`, de modo que se ajustan solo con los datos de entrenamiento de cada partición. Aún sin ajuste de hiperparámetros (alpha = 1).
+*Versión anterior, en `comprobacion/`. Los modelos del proyecto están en Altair.*
 
-### 2.8 Modelos con ajuste de hiperparámetros
 
-`src/modelos.py` compara tres modelos sobre las 56 características:
+`comprobacion/modelo_ridge.py`. Es una regresión lineal con regularización: una suma ponderada de las características. Se entrena tres veces, añadiendo un bloque cada vez, para ver qué aporta cada uno. El relleno de vacíos y el escalado van dentro de un `Pipeline`, de modo que se ajustan solo con los datos de entrenamiento de cada partición. Aún sin ajuste de hiperparámetros (alpha = 1).
+
+### 2.8 Comprobación en Python: modelos con ajuste de hiperparámetros
+
+*Versión anterior, en `comprobacion/`. Valida en 5 particiones de 10 jugadoras, no en 50 de una, por eso sus cifras no coinciden exactamente con las de Altair.*
+
+
+`comprobacion/modelos.py` compara tres modelos sobre las 56 características:
 
 | Modelo | Qué es | Hiperparámetros que se ajustan |
 |---|---|---|
@@ -256,18 +291,27 @@ Decisiones:
 
 **Un ajuste que hay que contar.** En una primera ejecución la regularización del MLP se probó con 0,001 y 0,1; se elegía casi siempre el valor más alto y el MLP quedaba por detrás (MAE 0,727). Se amplió la rejilla hacia arriba una vez y mejoró a 0,678. Con la rejilla actual sigue eligiendo siempre el valor más alto (10), así que podría quedar margen; no se ha ampliado más para no ajustar el diseño a los resultados de prueba.
 
-### 2.9 Explicabilidad y análisis de errores
+### 2.9 Contraste por jugadora y explicabilidad
+
+**Contraste pareado por jugadora** (`src/contraste_jugadoras.py`). En Altair, el ANOVA y el t-test mezclan los errores de todas las jugadoras. Como unas jugadoras son mucho más fáciles de predecir que otras, esa diferencia tapa la diferencia entre métodos. La prueba de Wilcoxon es pareada: compara dos métodos jugadora a jugadora y así descuenta lo difícil que sea cada una. Para hacerla se repite en Python la validación de Altair (una partición por jugadora) con modelos configurados igual (`src/modelo_altair.py`). La red neuronal no se incluye, porque su algoritmo de aprendizaje no se puede reproducir de forma equivalente.
 
 **SHAP** (`src/explicabilidad.py`). Para cada predicción, SHAP reparte entre las características la diferencia entre esa predicción y la predicción media. Cada característica recibe un valor en puntos de readiness, positivo si sube la predicción y negativo si la baja, y la suma de todos más el valor base da exactamente la predicción (el código lo comprueba).
 
-- **Se explica Random Forest.** Los tres modelos rinden igual; se elige este porque es el mejor en la comprobación temporal y porque en modelos de árboles SHAP se calcula de forma exacta, sin las aproximaciones que exige una red de neuronas.
-- **Se explican jugadoras no vistas.** En cada partición se entrena con 40 jugadoras y se explican 600 predicciones al azar de las otras 10 (3.000 en total).
+- **Se explica el mismo modelo que Altair.** El proceso 06 de Altair usa el Random Forest entrenado con 2020 y aplicado a 2021, y da una importancia global de cada variable. SHAP explica ese mismo modelo, configurado igual en Python, y añade en qué sentido empuja cada variable y por qué sale cada predicción concreta.
+- **Se explican 3.000 días de 2021** elegidos al azar, con semilla fija. En Random Forest, SHAP se calcula de forma exacta.
 
-**Análisis de errores** (`src/analisis_errores.py`). Usa la predicción de cada ejemplo cuando estaba en la partición de prueba (`reports/tablas/predicciones_cv.csv`) y la desglosa por jugadora, por datos disponibles y por tamaño del cambio.
+**Análisis de errores.** El de Altair (proceso 06) desglosa el error por franja de readiness. El desglose por jugadora, por huecos y por tamaño del cambio está en la comprobación en Python (`comprobacion/analisis_errores.py`, apartado 3.5).
 
 ### 2.10 Fases siguientes
 
-Pendiente: extensión opcional (recomendación de carga) y redacción de la memoria.
+Pendiente, en este orden:
+
+1. **Altair**: recalcular la persistencia dentro del mismo `Cross Validation` y añadir el ajuste de hiperparámetros (`Optimize Parameters`).
+2. **Notas repetidas**: repetir la evaluación quitando las rachas de 14 o más días con la misma nota, para ver si cambian las conclusiones.
+3. **Ceros de carga**: añadir si el resto del equipo entrenó ese día, y medir si cambia algo.
+4. **Variables redundantes**: quitar el strain y comprobar que no empeora.
+5. **Memoria**.
+6. **Extensión con lógica difusa**, solo si da tiempo.
 
 ## 3. Resultados
 
@@ -308,7 +352,7 @@ Dónde falla cada uno (MAE, validación por jugadoras):
 - **Todos fallan más en los días malos.** Cuando la readiness real es de 4 o menos, el mejor baseline se equivoca en 1,5 puntos. Son pocos días, pero son los que más interesaría anticipar.
 - **No hay un baseline que gane para todas las jugadoras.** La media de 7 días es la mejor en 19, la persistencia en 14, la media propia en 11 y la media global en 6.
 
-### 3.2 Primer modelo (Ridge)
+### 3.2 Comprobación en Python: primer modelo (Ridge)
 
 ![Ridge frente a las referencias](reports/figures/11_ridge_vs_baselines.png)
 
@@ -361,7 +405,7 @@ Dónde falla (MAE, validación por jugadoras):
 
 - **Ridge gana en los días normales y pierde en los malos.** Es el mejor cuando la readiness real está entre 5 y 7 y cuando hay cambio, pero el peor cuando es 4 o menos: tiende a predecir valores cercanos a la media.
 
-### 3.3 Modelos con ajuste de hiperparámetros
+### 3.3 Comprobación en Python: modelos con ajuste de hiperparámetros
 
 ![Modelos frente a las referencias](reports/figures/13_modelos_vs_baselines.png)
 
@@ -420,19 +464,50 @@ Hiperparámetros elegidos: Ridge alterna entre alpha 0,1 y 100 según la partici
 - **Los modelos se quedan cortos en los extremos.** Cuando la readiness real es 1 o 2, predicen de media entre 4 y 5; cuando es 10, predicen 8. Aciertan mejor en la zona central, donde está casi todo el dato.
 - **Ningún modelo mejora a la persistencia en los días malos** (readiness de 4 o menos). Son el 6 % de los ejemplos y es el punto más débil del sistema.
 
-### 3.4 Explicabilidad (SHAP)
+### 3.4 Modelos en Altair y contraste por jugadora
+
+Resultados completos en [`ALTAIR.md`](ALTAIR.md), apartado 5. Validación por jugadoras en Altair: 50 particiones, una por jugadora; cada cifra es la media entre jugadoras.
+
+| Método | RMSE | MAE |
+|---|---|---|
+| Persistencia ⚠️ | 1,268 ± 0,438 | 0,841 ± 0,369 |
+| Media de 7 días | 1,081 ± 0,362 | 0,783 ± 0,306 |
+| Ridge | 1,002 ± 0,309 | 0,743 ± 0,243 |
+| **Random Forest** | **0,995 ± 0,287** | **0,735 ± 0,236** |
+| Red neuronal | 1,060 ± 0,312 | 0,797 ± 0,250 |
+
+⚠️ La persistencia está calculada en Python con la misma cuenta (`src/contraste_jugadoras.py`); falta recalcularla en Altair.
+
+**Python reproduce los errores de Altair.** Con la misma configuración y la misma validación, Python obtiene: media de 7 días 1,081 / 0,783, Ridge 1,002 / 0,743 y Random Forest 0,994 / 0,736 (RMSE / MAE). Coinciden con Altair hasta la tercera cifra decimal.
+
+**Contraste estadístico.** El ANOVA de Altair no detecta diferencias entre métodos ($p = 0,447$), porque la diferencia entre jugadoras es enorme (el error va de 0,3 a 1,3 según la jugadora). Comparando jugadora a jugadora con Wilcoxon:
+
+| Comparación (RMSE por jugadora) | Jugadoras en que gana el primero | p |
+|---|---|---|
+| Random Forest frente a media de 7 días | 41 de 50 | < 0,001 |
+| Ridge frente a media de 7 días | 43 de 50 | < 0,001 |
+| Media de 7 días frente a persistencia | 48 de 50 | < 0,001 |
+| Random Forest frente a Ridge | 29 de 50 | 0,28 |
+
+- **Los dos modelos mejoran a la mejor referencia** de forma significativa al comparar jugadora a jugadora. Con el MAE la conclusión es la misma (p ≤ 0,001).
+- **Random Forest y Ridge no se diferencian.** A igualdad de resultados, Ridge es más simple; Random Forest tiene el menor error en la validación temporal.
+
+### 3.5 Explicabilidad (SHAP)
+
+Sobre el Random Forest con la configuración de Altair, entrenado con 2020 y evaluado en 2021. En Python obtiene MAE 0,656 y RMSE 0,950 (Altair: 0,667 y 0,960).
 
 ![Importancia SHAP](reports/figures/15_shap_importancia.png)
 
 | Bloque | % de la importancia total |
 |---|---|
 | Historial de readiness | 70 |
-| Carga | 19 |
+| Carga | 21 |
 | Bienestar | 6 |
-| Contexto | 5 |
+| Contexto | 3 |
 
-- **Lo que más pesa es el pasado de la propia readiness.** La media de los últimos 7 días es, con diferencia, la característica más influyente (mueve la predicción 0,56 puntos de media), seguida de la media propia de la jugadora.
-- **La carga del día es la tercera característica** (0,19 puntos), por delante incluso de la readiness de hoy. El bloque de carga suma el 19 % de la importancia.
+- **Lo que más pesa es el pasado de la propia readiness.** La media de los últimos 7 días es, con diferencia, la característica más influyente (mueve la predicción 0,54 puntos de media), seguida de la media propia de la jugadora.
+- **La carga de hoy es la tercera característica** (0,19 puntos), al nivel de la media propia y por delante de la readiness de hoy. El bloque de carga suma el 21 % de la importancia.
+- **Coincide con Altair.** Las cuatro variables con más peso en Altair (media propia, media de 7 días, carga de hoy y readiness de hoy) son las cuatro primeras también con SHAP.
 - **El resto del cuestionario apenas cuenta** (6 %): fatiga, sueño, estrés, ánimo y dolor muscular no añaden casi nada a lo que ya dice la readiness.
 - **El día de la semana influye un poco**: si mañana es domingo la predicción baja; si es sábado, sube.
 
@@ -447,10 +522,10 @@ Dos casos individuales, ambos con readiness real baja:
 
 ![Día malo fallado](reports/figures/18_shap_caso_dia_malo_fallado.png)
 
-- **Acierto**: la jugadora lleva una semana con readiness baja (media de 3,1), y eso arrastra la predicción hasta 4,05 (real: 4).
-- **Fallo**: la jugadora viene de una semana buena (media de 8,3) y al día siguiente declara un 2. Nada en sus datos lo anticipaba y el modelo predice 8,5. Es el tipo de día que el sistema no puede prever con esta información.
+- **Acierto** (A14, 25-02-2021): la jugadora lleva varios días bajos (media de 3 días de 3,3 y de 7 días de 4,6), y eso arrastra la predicción hasta 3,99 (real: 4).
+- **Fallo** (A20, 04-10-2021): la jugadora viene de una semana muy buena (media de 8,75, hoy un 9) y al día siguiente declara un 1. Nada en sus datos lo anticipaba y el modelo predice 8,55. Es el tipo de día que el sistema no puede prever con esta información.
 
-### 3.5 Análisis de errores
+### 3.6 Comprobación en Python: análisis de errores
 
 ![Análisis de errores](reports/figures/19_analisis_errores.png)
 

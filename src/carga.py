@@ -5,8 +5,10 @@ Lee los ficheros de data/raw/subjective/ y genera UNA tabla con una fila por
 jugadora y día (formato "largo"), que es lo que necesitan tanto Python como
 Altair AI Studio para trabajar.
 
-Uso (desde la carpeta "Practica final"):
-    .venv/bin/python src/carga.py
+Se usa de dos formas, con el mismo código:
+  - Desde la terminal (carpeta del proyecto):  .venv/bin/python src/carga.py
+  - Desde Altair AI Studio: el proceso 01_Ingesta_y_Limpieza lo ejecuta con el
+    operador Execute Python, que llama a rm_main() con la macro repo_dir.
 
 Salidas (en data/processed/):
     jugadora_dia.csv   -> la tabla base (50 jugadoras x 731 días = 36.550 filas)
@@ -30,9 +32,11 @@ from pathlib import Path
 import pandas as pd
 
 # --- Rutas (relativas a la carpeta del proyecto, no a donde se ejecute) -------
-RAIZ = Path(__file__).resolve().parent.parent
-CRUDOS = RAIZ / "data" / "raw" / "subjective"
-SALIDA = RAIZ / "data" / "processed"
+# Dentro de Altair no existe __file__: allí la carpeta llega en la macro repo_dir.
+try:
+    RAIZ = Path(__file__).resolve().parent.parent
+except NameError:
+    RAIZ = None
 
 # --- Variables del dataset: nombre del fichero -> nombre de la columna --------
 # Bienestar: cuestionario diario. readiness va de 1 a 10; sleep_duration son
@@ -107,15 +111,16 @@ def leer_sesiones(ruta: Path) -> pd.DataFrame:
     )
 
 
-def construir_tabla() -> tuple[pd.DataFrame, pd.DataFrame]:
+def construir_tabla(raiz: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Devuelve (tabla jugadora-día, tabla de correspondencia de jugadoras)."""
+    crudos = raiz / "data" / "raw" / "subjective"
     # 1) Leer cada variable y unirlas por (jugadora, fecha). Todos los ficheros
     #    tienen las mismas 50 jugadoras y los mismos 731 días, así que la unión
     #    no pierde ni duplica filas (se comprueba más abajo).
     tabla = None
     for carpeta, variables in (("wellness", BIENESTAR), ("training-load", CARGA)):
         for fichero, nombre in variables.items():
-            parte = leer_ancho(CRUDOS / carpeta / f"{fichero}.csv", nombre)
+            parte = leer_ancho(crudos / carpeta / f"{fichero}.csv", nombre)
             tabla = parte if tabla is None else tabla.merge(
                 parte, on=CLAVE, how="outer", validate="one_to_one"
             )
@@ -123,7 +128,7 @@ def construir_tabla() -> tuple[pd.DataFrame, pd.DataFrame]:
     # 2) Añadir el resumen de sesiones. Día sin sesión -> 0 sesiones y 0 minutos;
     #    el RPE medio se deja en NaN porque no hay nada que promediar.
     tabla = tabla.merge(
-        leer_sesiones(CRUDOS / "training-load" / "session.json"),
+        leer_sesiones(crudos / "training-load" / "session.json"),
         on=CLAVE, how="left", validate="one_to_one",
     )
     tabla["n_sesiones"] = tabla["n_sesiones"].fillna(0).astype(int)
@@ -136,7 +141,7 @@ def construir_tabla() -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # 4) Código corto y legible por jugadora (A01...A27, B01...B23), respetando
     #    el orden en que aparecen en el dataset. El original se guarda aparte.
-    ids = pd.read_csv(CRUDOS / "wellness" / "readiness.csv", nrows=0).columns[1:]
+    ids = pd.read_csv(crudos / "wellness" / "readiness.csv", nrows=0).columns[1:]
     jugadoras = pd.DataFrame({"jugadora_id": ids})
     jugadoras["equipo"] = jugadoras["jugadora_id"].str.slice(4, 5)
     numero = jugadoras.groupby("equipo").cumcount() + 1
@@ -171,13 +176,21 @@ def comprobar(tabla: pd.DataFrame) -> None:
     assert tabla[list(CARGA.values())].notna().all().all(), "Carga con huecos"
 
 
+def rm_main(macros):
+    """Punto de entrada para Altair AI Studio (operador Execute Python).
+    Devuelve las dos tablas; el proceso las guarda con Store."""
+    return construir_tabla(Path(macros["repo_dir"]))
+
+
 def main() -> None:
-    tabla, jugadoras = construir_tabla()
+    """Punto de entrada desde la terminal: guarda las tablas en CSV."""
+    tabla, jugadoras = construir_tabla(RAIZ)
+    salida = RAIZ / "data" / "processed"
     comprobar(tabla)
 
-    SALIDA.mkdir(parents=True, exist_ok=True)
-    tabla.to_csv(SALIDA / "jugadora_dia.csv", index=False, date_format="%Y-%m-%d")
-    jugadoras.to_csv(SALIDA / "jugadoras.csv", index=False)
+    salida.mkdir(parents=True, exist_ok=True)
+    tabla.to_csv(salida / "jugadora_dia.csv", index=False, date_format="%Y-%m-%d")
+    jugadoras.to_csv(salida / "jugadoras.csv", index=False)
 
     print(f"Tabla guardada: {len(tabla)} filas x {tabla.shape[1]} columnas")
     print(f"  Jugadoras: {tabla['jugadora'].nunique()} "

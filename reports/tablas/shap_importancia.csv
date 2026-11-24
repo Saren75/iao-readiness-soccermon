@@ -1,57 +1,57 @@
 ,importancia,bloque
-readiness_m7,0.55857,Historial de readiness
-media_propia,0.18668,Historial de readiness
-carga_diaria,0.18512,Carga
-readiness,0.15216,Historial de readiness
-readiness_m3,0.10131,Historial de readiness
-manana_dom,0.02614,Contexto
-carga_diaria_d2,0.02211,Carga
-n_cuestionarios_previos,0.02022,Contexto
-carga_diaria_d1,0.01895,Carga
-ctl28,0.01220,Carga
-manana_sab,0.01195,Contexto
-carga_diaria_m3,0.00847,Carga
-sueno_horas_m7,0.00757,Bienestar
-acwr,0.00647,Carga
-monotonia,0.00643,Carga
-atl,0.00623,Carga
-dolor_muscular_m7,0.00604,Bienestar
-estres_m7,0.00561,Bienestar
-fatiga_m7,0.00547,Bienestar
-animo_m7,0.00514,Bienestar
-sueno_calidad_m7,0.00486,Bienestar
-strain,0.00455,Carga
-sueno_horas,0.00431,Bienestar
-estres_m3,0.00363,Bienestar
-dolor_muscular,0.00360,Bienestar
-readiness_d2,0.00355,Historial de readiness
-estres,0.00317,Bienestar
-dolor_muscular_m3,0.00281,Bienestar
-sueno_horas_m3,0.00274,Bienestar
-manana_lun,0.00263,Contexto
-animo_m3,0.00257,Bienestar
-fatiga_m3,0.00255,Bienestar
-dias_con_datos_7d,0.00248,Contexto
-sueno_calidad_m3,0.00244,Bienestar
-readiness_d1,0.00223,Historial de readiness
-sueno_horas_d2,0.00221,Bienestar
-sueno_horas_d1,0.00212,Bienestar
-sueno_calidad,0.00190,Bienestar
-fatiga,0.00172,Bienestar
-sueno_calidad_d2,0.00171,Bienestar
-manana_jue,0.00151,Contexto
-animo,0.00141,Bienestar
-manana_mie,0.00138,Contexto
-sueno_calidad_d1,0.00104,Bienestar
-estres_d1,0.00104,Bienestar
-dolor_muscular_d2,0.00099,Bienestar
-fatiga_d2,0.00099,Bienestar
-dolor_muscular_d1,0.00095,Bienestar
-manana_mar,0.00093,Contexto
-animo_d1,0.00092,Bienestar
-fatiga_d1,0.00079,Bienestar
-estres_d2,0.00072,Bienestar
-animo_d2,0.00068,Bienestar
-manana_vie,0.00055,Contexto
-hay_ayer,0.00038,Contexto
-hay_anteayer,0.00032,Contexto
+readiness_media_7d,0.54448,Historial de readiness
+readiness_media_propia,0.19460,Historial de readiness
+carga_hoy,0.19451,Carga
+readiness_hoy,0.15042,Historial de readiness
+readiness_media_3d,0.07241,Historial de readiness
+carga_ayer,0.02586,Carga
+carga_anteayer,0.02470,Carga
+dia_manana_6,0.01556,Contexto
+acwr,0.01298,Carga
+cuestionarios_acumulados,0.01186,Contexto
+monotonia,0.00999,Carga
+ctl28,0.00880,Carga
+dia_manana_5,0.00845,Contexto
+carga_media_3d,0.00819,Carga
+dia_manana_0,0.00729,Contexto
+readiness_anteayer,0.00709,Historial de readiness
+strain,0.00659,Carga
+estres_media_7d,0.00657,Bienestar
+dolor_muscular_media_7d,0.00612,Bienestar
+atl,0.00524,Carga
+animo_media_7d,0.00499,Bienestar
+estres_media_3d,0.00497,Bienestar
+sueno_horas_media_7d,0.00432,Bienestar
+fatiga_ayer,0.00411,Bienestar
+dolor_muscular_hoy,0.00393,Bienestar
+fatiga_media_7d,0.00359,Bienestar
+dolor_muscular_ayer,0.00330,Bienestar
+readiness_ayer,0.00323,Historial de readiness
+sueno_calidad_media_7d,0.00290,Bienestar
+sueno_horas_media_3d,0.00266,Bienestar
+sueno_calidad_media_3d,0.00264,Bienestar
+sueno_horas_hoy,0.00254,Bienestar
+dolor_muscular_anteayer,0.00229,Bienestar
+dias_datos_7d,0.00223,Contexto
+estres_hoy,0.00208,Bienestar
+sueno_horas_anteayer,0.00188,Bienestar
+sueno_calidad_ayer,0.00178,Bienestar
+fatiga_media_3d,0.00175,Bienestar
+animo_ayer,0.00173,Bienestar
+dolor_muscular_media_3d,0.00172,Bienestar
+animo_hoy,0.00165,Bienestar
+fatiga_anteayer,0.00164,Bienestar
+estres_ayer,0.00154,Bienestar
+sueno_horas_ayer,0.00142,Bienestar
+animo_anteayer,0.00130,Bienestar
+fatiga_hoy,0.00129,Bienestar
+sueno_calidad_hoy,0.00127,Bienestar
+estres_anteayer,0.00126,Bienestar
+sueno_calidad_anteayer,0.00112,Bienestar
+animo_media_3d,0.00094,Bienestar
+dia_manana_1,0.00067,Contexto
+dia_manana_2,0.00060,Contexto
+tiene_bienestar_anteayer,0.00046,Contexto
+dia_manana_4,0.00026,Contexto
+dia_manana_3,0.00022,Contexto
+tiene_bienestar_ayer,0.00013,Contexto

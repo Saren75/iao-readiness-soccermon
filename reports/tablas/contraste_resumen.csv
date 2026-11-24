@@ -1,0 +1,5 @@
+metodo,MAE_media,MAE_desv,RMSE_media,RMSE_desv
+Persistencia,0.8412,0.3687,1.2680,0.4380
+Media de 7 días,0.7827,0.3063,1.0807,0.3618
+Ridge,0.7428,0.2431,1.0016,0.3095
+Random Forest,0.7357,0.2348,0.9944,0.2856
