@@ -6,12 +6,12 @@ Se predice la disposición para entrenar (*readiness*, de 1 a 10) que una futbol
 
 ## Herramientas
 
-El proyecto combina Altair AI Studio y Python. Cada paso se hace en una sola herramienta:
+El proyecto combina Altair AI Studio y Python. Cada paso tiene una herramienta principal:
 
 | Paso | Herramienta | Dónde |
 |---|---|---|
 | Construir la tabla jugadora-día | Python, ejecutado desde Altair | `src/carga.py` · proceso `01_Ingesta_y_Limpieza` |
-| Análisis exploratorio | Python | `src/aed.py` |
+| Análisis exploratorio | Python (completo) y Altair (vistas principales) | `src/aed.py` · proceso `02_AED_Exploracion` |
 | Construir las 56 características | Python, ejecutado desde Altair | `src/features.py` · proceso `03_Ingenieria_Caracteristicas` |
 | Referencias, modelos (Ridge, Random Forest, red neuronal), validación por jugadoras, ANOVA y t-test | Altair | proceso `04_Baselines_y_Modelado` |
 | Validación temporal 2020 → 2021 | Altair | proceso `05_Validacion_Temporal_2020_2021` |
@@ -163,6 +163,8 @@ Decisiones y su justificación:
 ### 2.3 Análisis exploratorio
 
 `src/aed.py` genera nueve figuras y ocho tablas. No entrena nada: sirve para decidir con datos.
+
+El proceso `02_AED_Exploracion` de Altair reproduce las vistas principales sobre la misma tabla jugadora-día: distribución de la readiness, media y dispersión por jugadora, cobertura, matriz de correlaciones y autocorrelación con el día anterior (figuras en `reports/altair/`). El análisis completo está en Python porque incluye cálculos que en Altair requieren mucho más trabajo: correlaciones con la readiness del día siguiente y dentro de cada jugadora, autocorrelación hasta 14 días, rachas de notas repetidas y cuántos ejemplos quedan según el tratamiento de los huecos.
 
 #### Cuántos datos hay y dónde están los huecos
 
