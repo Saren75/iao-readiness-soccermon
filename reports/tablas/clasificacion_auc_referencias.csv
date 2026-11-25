@@ -1,0 +1,3 @@
+regla,AUC
+Persistencia (hoy <= 4),0.8273
+Media de 7 días <= 4,0.8560

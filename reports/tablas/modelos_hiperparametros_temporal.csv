@@ -1,4 +1,0 @@
-particion,modelo,MAE_interno,alpha,max_features,min_samples_leaf,hidden_layer_sizes,learning_rate_init
-2020_a_2021,Ridge,0.7058,100,,,,
-2020_a_2021,Random Forest,0.7137,,0.33,5,,
-2020_a_2021,MLP,0.7130,10,,,"(32,)",0.001

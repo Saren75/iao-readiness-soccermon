@@ -1,5 +1,0 @@
-baseline,MAE_media,MAE_desv,RMSE_media,RMSE_desv,R2_media,R2_desv
-Media global,1.1393,0.0996,1.4690,0.1452,-0.0500,0.0578
-Media propia,0.8430,0.0358,1.1823,0.0634,0.3080,0.1223
-Media de 7 días,0.7107,0.0876,1.0393,0.1033,0.4452,0.1850
-Persistencia,0.7647,0.1106,1.2314,0.1332,0.2207,0.2703

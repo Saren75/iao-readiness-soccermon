@@ -1,7 +1,0 @@
-comparacion,dif_MAE,p_ttest_particiones,p_wilcoxon_jugadoras,jugadoras_en_que_gana_el_primero
-Ridge  vs  Media de 7 días,-0.02233,0.40389,0.00057,38
-Random Forest  vs  Media de 7 días,-0.02266,0.33829,0.00418,36
-MLP  vs  Media de 7 días,-0.03233,0.20231,0.00143,35
-Ridge  vs  Random Forest,0.00033,0.96485,0.38290,23
-Ridge  vs  MLP,0.01000,0.25596,0.46061,23
-Random Forest  vs  MLP,0.00966,0.31269,0.41519,29

@@ -1,0 +1,5 @@
+variante,ejemplos,jugadoras,RMSE Persistencia,RMSE Media de 7 días,RMSE Ridge,RMSE Random Forest,RMSE p Ridge vs 7 días,RMSE p Random Forest vs 7 días,MAE Persistencia,MAE Media de 7 días,MAE Ridge,MAE Random Forest,MAE p Ridge vs 7 días,MAE p Random Forest vs 7 días,p RF frente a la base (RMSE)
+Base (56 características),14631,50,1.268,1.081,1.002,0.9944,6.71e-08,1.049e-07,0.8412,0.7827,0.7428,0.7357,0.0004886,0.001147,
+Sin rachas de 14+ días,13676,50,1.284,1.095,1.015,1.004,6.71e-08,5.765e-08,0.8564,0.797,0.7549,0.7433,0.0002625,0.0002309,
+Con equipo_entreno_hoy,14631,50,1.268,1.081,1.002,0.9942,6.221e-08,9.051e-08,0.8412,0.7827,0.743,0.7352,0.0005511,0.001147,0.5656
+Sin strain,14631,50,1.268,1.081,1.002,0.994,6.221e-08,8.403e-08,0.8412,0.7827,0.7429,0.7355,0.0003379,0.001105,0.09513

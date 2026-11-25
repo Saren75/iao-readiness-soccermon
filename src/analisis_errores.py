@@ -1,21 +1,23 @@
 """
-Fase 7 - Análisis de errores.
+Análisis de errores de los modelos de Altair.
 
-No entrena nada: usa reports/tablas/predicciones_cv.csv (generado por
-modelos.py), que guarda la predicción de cada ejemplo cuando estaba en la
-partición de prueba. Así cada error analizado es de una jugadora no vista.
+No entrena nada: usa reports/tablas/predicciones_por_jugadora.csv, que genera
+contraste_jugadoras.py repitiendo la validación por jugadoras de Altair (una
+partición por jugadora). Cada predicción es, por tanto, de una jugadora que el
+modelo no había visto.
 
 Preguntas:
   1. ¿En qué jugadoras acierta más y menos el modelo, y por qué?
   2. ¿Empeora cuando faltan datos de los días anteriores?
   3. ¿Cuánto falla según lo grande que sea el cambio de un día a otro?
-  4. ¿Cuántas predicciones quedan a 1 punto o menos del valor real?
+  4. ¿Cómo falla según la franja de readiness (baja, media, alta)?
+  5. ¿Cuántas predicciones quedan a 1 punto o menos del valor real?
 
-Se analiza Random Forest (el modelo explicado con SHAP) frente al mejor
-baseline (media de 7 días).
+Se analiza el Random Forest (el modelo explicado con SHAP) frente a la mejor
+referencia (la media de 7 días).
 
-Uso (desde la carpeta "Practica final"), después de modelos.py:
-    .venv/bin/python comprobacion/analisis_errores.py
+Uso (desde la carpeta del proyecto), después de contraste_jugadoras.py:
+    .venv/bin/python src/analisis_errores.py
 """
 
 import matplotlib
@@ -25,21 +27,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from validacion import RAIZ, cargar_ejemplos
+from features import RAIZ, cargar_ejemplos
 
 FIGURAS = RAIZ / "reports" / "figures"
 TABLAS = RAIZ / "reports" / "tablas"
 AZUL, NARANJA, GRIS, GRIS_CLARO, TINTA = "#2a78d6", "#eb6834", "#898781", "#e1e0d9", "#52514e"
-METODOS = ["Persistencia", "Media de 7 días", "Ridge", "Random Forest", "MLP"]
+METODOS = ["Media global", "Media propia", "Persistencia", "Media de 7 días", "Ridge", "Random Forest"]
 MODELO, BASE = "Random Forest", "Media de 7 días"
 
 
 def cargar() -> pd.DataFrame:
-    """Une las predicciones con las características de contexto de cada ejemplo
-    y calcula el error absoluto de cada método."""
-    pred = pd.read_csv(TABLAS / "predicciones_cv.csv", parse_dates=["fecha"])
-    contexto = cargar_ejemplos()[["jugadora", "fecha", "equipo", "temporada",
-                                  "hay_ayer", "dias_con_datos_7d"]]
+    """Une las predicciones con el contexto de cada ejemplo y calcula el error
+    absoluto de cada método."""
+    pred = pd.read_csv(TABLAS / "predicciones_por_jugadora.csv", parse_dates=["fecha"])
+    contexto = cargar_ejemplos()[["jugadora", "fecha", "equipo", "temporada", "readiness_hoy",
+                                  "tiene_bienestar_ayer", "dias_datos_7d"]]
     d = pred.merge(contexto, on=["jugadora", "fecha"], validate="one_to_one")
     for m in METODOS:
         d[f"err_{m}"] = (d[m] - d["real"]).abs()
@@ -57,10 +59,10 @@ def mae_por(d: pd.DataFrame, grupo, metodos=METODOS) -> pd.DataFrame:
 def por_jugadora(d: pd.DataFrame) -> pd.DataFrame:
     t = mae_por(d, "jugadora")
     t["equipo"] = d.groupby("jugadora")["equipo"].first()
-    # Variabilidad: cuánto oscila la readiness de esa jugadora de un día a otro
+    # Variabilidad: cuánto oscila la readiness de esa jugadora
     t["desv_readiness"] = d.groupby("jugadora")["real"].std()
-    t["pct_sin_cambio"] = 100 * (d["real"] == d["hoy"]).groupby(d["jugadora"]).mean()
-    t["mejora"] = t[BASE] - t[MODELO]   # positivo = el modelo gana al baseline
+    t["pct_sin_cambio"] = 100 * (d["real"] == d["readiness_hoy"]).groupby(d["jugadora"]).mean()
+    t["mejora"] = t[BASE] - t[MODELO]   # positivo = el modelo gana a la referencia
     return t
 
 
@@ -72,7 +74,7 @@ def figura(jug: pd.DataFrame, cambio: pd.DataFrame) -> None:
         "axes.spines.right": False, "axes.axisbelow": True, "legend.frameon": False})
     fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(14, 4.2))
 
-    # 1) Modelo frente a baseline, una jugadora por punto
+    # 1) Modelo frente a referencia, una jugadora por punto
     tope = max(jug[MODELO].max(), jug[BASE].max()) * 1.05
     a1.plot([0, tope], [0, tope], color="#c3c2b7", linewidth=1, linestyle="--")
     for equipo, color in (("A", AZUL), ("B", NARANJA)):
@@ -81,8 +83,8 @@ def figura(jug: pd.DataFrame, cambio: pd.DataFrame) -> None:
                    edgecolors="white", linewidths=1, label=f"Equipo {equipo}")
     a1.text(tope * 0.97, tope * 0.05, "Por debajo de la línea:\ngana el modelo", ha="right",
             fontsize=8, color=TINTA)
-    a1.set_xlabel(f"MAE de {BASE.lower()}")
-    a1.set_ylabel(f"MAE de {MODELO}")
+    a1.set_xlabel(f"MAE de la {BASE.lower()}")
+    a1.set_ylabel(f"MAE del {MODELO}")
     a1.set_title("Error por jugadora (tamaño = nº de ejemplos)")
     a1.grid(color=GRIS_CLARO, linewidth=0.8)
     a1.legend(loc="upper left", fontsize=8)
@@ -92,7 +94,7 @@ def figura(jug: pd.DataFrame, cambio: pd.DataFrame) -> None:
                edgecolors="white", linewidths=1)
     r = jug["desv_readiness"].corr(jug[MODELO])
     a2.set_xlabel("Desviación típica de la readiness de la jugadora")
-    a2.set_ylabel(f"MAE de {MODELO}")
+    a2.set_ylabel(f"MAE del {MODELO}")
     a2.set_title(f"A más variable la jugadora, más error (r = {r:.2f})".replace(".", ","))
     a2.grid(color=GRIS_CLARO, linewidth=0.8)
 
@@ -121,8 +123,9 @@ def main() -> None:
     # 1. Por jugadora
     jug = por_jugadora(d)
     print("=== 1. POR JUGADORA ===")
-    print(f"MAE de {MODELO}: de {jug[MODELO].min():.2f} a {jug[MODELO].max():.2f} (mediana {jug[MODELO].median():.2f})")
-    print(f"Gana al baseline en {(jug['mejora'] > 0).sum()} de {len(jug)} jugadoras")
+    print(f"MAE del {MODELO}: de {jug[MODELO].min():.2f} a {jug[MODELO].max():.2f} "
+          f"(mediana {jug[MODELO].median():.2f})")
+    print(f"Gana a la {BASE.lower()} en {(jug['mejora'] > 0).sum()} de {len(jug)} jugadoras")
     print("Correlación del MAE del modelo con:")
     print(f"  variabilidad de la jugadora (desv. típica): {jug[MODELO].corr(jug['desv_readiness']):+.2f}")
     print(f"  % de días sin cambio:                       {jug[MODELO].corr(jug['pct_sin_cambio']):+.2f}")
@@ -135,21 +138,30 @@ def main() -> None:
 
     # 2. Por huecos
     print("\n=== 2. SEGÚN LOS DATOS DISPONIBLES ===")
-    ayer = mae_por(d, d["hay_ayer"].map({1: "Con cuestionario ayer", 0: "Sin cuestionario ayer"}))
-    semana = mae_por(d, pd.cut(d["dias_con_datos_7d"], [0, 3, 6, 7], labels=["1-3 días", "4-6 días", "7 días"]))
+    ayer = mae_por(d, d["tiene_bienestar_ayer"].map({1: "Con cuestionario ayer", 0: "Sin cuestionario ayer"}))
+    semana = mae_por(d, pd.cut(d["dias_datos_7d"], [0, 3, 6, 7], labels=["1-3 días", "4-6 días", "7 días"]))
     print(ayer.to_string())
     print(semana.rename_axis("Días con datos en la última semana").to_string())
 
     # 3. Por tamaño del cambio
     print("\n=== 3. SEGÚN EL TAMAÑO DEL CAMBIO ===")
-    tam = (d["real"] - d["hoy"]).abs().clip(upper=3).astype(int).map({0: "0", 1: "1", 2: "2", 3: "3 o más"})
+    tam = ((d["real"] - d["readiness_hoy"]).abs().clip(upper=3).astype(int)
+           .map({0: "0", 1: "1", 2: "2", 3: "3 o más"}))
     cambio = mae_por(d, tam)
     print(cambio.to_string())
-    sentido = mae_por(d, np.select([d["real"] < d["hoy"], d["real"] > d["hoy"]], ["Baja", "Sube"], "Igual"))
-    print(sentido.to_string())
 
-    # 4. Precisión con margen
-    print("\n=== 4. PREDICCIONES CERCA DEL VALOR REAL ===")
+    # 4. Por franja de readiness de mañana (las mismas que el proceso 06 de Altair)
+    print("\n=== 4. SEGÚN LA FRANJA DE READINESS DE MAÑANA ===")
+    franja = pd.cut(d["real"], [0, 4, 7, 10], labels=["Baja (1-4)", "Media (5-7)", "Alta (8-10)"])
+    franjas = mae_por(d, franja)
+    print(franjas.to_string())
+    # Sesgo: en los días bajos, ¿el modelo se queda corto (predice demasiado alto)?
+    sesgo = (d[MODELO] - d["real"]).groupby(franja, observed=True).mean()
+    print(f"Error medio con signo del {MODELO} (positivo = predice de más):")
+    print(sesgo.to_string())
+
+    # 5. Precisión con margen
+    print("\n=== 5. PREDICCIONES CERCA DEL VALOR REAL ===")
     margen = pd.DataFrame({
         "A 0,5 puntos o menos (%)": [100 * (d[f"err_{m}"] <= 0.5).mean() for m in METODOS],
         "A 1 punto o menos (%)": [100 * (d[f"err_{m}"] <= 1).mean() for m in METODOS],
@@ -157,14 +169,15 @@ def main() -> None:
     }, index=METODOS)
     print(margen.round(1).to_string())
 
-    # 5. Otros cortes
-    print("\n=== 5. POR EQUIPO Y TEMPORADA ===")
+    # 6. Otros cortes
+    print("\n=== 6. POR EQUIPO Y TEMPORADA ===")
     print(mae_por(d, "equipo", [BASE, MODELO]).to_string())
     print(mae_por(d, "temporada", [BASE, MODELO]).to_string())
 
     jug.to_csv(TABLAS / "errores_por_jugadora.csv", float_format="%.4f")
     pd.concat([ayer, semana]).to_csv(TABLAS / "errores_por_datos_disponibles.csv", float_format="%.4f")
     cambio.to_csv(TABLAS / "errores_por_cambio.csv", float_format="%.4f")
+    franjas.assign(sesgo_rf=sesgo).to_csv(TABLAS / "errores_por_franja.csv", float_format="%.4f")
     margen.to_csv(TABLAS / "errores_margen.csv", float_format="%.2f")
     figura(jug, cambio)
 

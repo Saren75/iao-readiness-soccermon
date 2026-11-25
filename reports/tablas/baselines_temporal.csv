@@ -1,5 +1,0 @@
-baseline,n_prueba,MAE,RMSE,R2
-Media global,8400,1.1412,1.5172,-0.0009
-Media propia,8400,0.8545,1.2196,0.3532
-Media de 7 días,8400,0.6922,1.0269,0.5414
-Persistencia,8400,0.7358,1.1937,0.3804

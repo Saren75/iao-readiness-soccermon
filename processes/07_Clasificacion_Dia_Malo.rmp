@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="12.1.001">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="12.1.001" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="12.1.001" expanded="true" height="68" name="Retrieve" width="90" x="45" y="238">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/data/processed/ejemplos"/>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="12.1.001" expanded="true" height="82" name="Generar dia_malo" width="90" x="179" y="238">
+        <list key="function_descriptions">
+          <parameter key="dia_malo" value="if(readiness_manana&lt;=4,1,0)"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Europe/Madrid"/>
+      </operator>
+      <operator activated="true" class="numerical_to_binominal" compatibility="12.1.001" expanded="true" height="82" name="dia_malo a binominal" width="90" x="313" y="238">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="dia_malo"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="0.0"/>
+      </operator>
+      <operator activated="true" class="blending:set_role" compatibility="12.1.001" expanded="true" height="82" name="Etiqueta dia_malo" width="90" x="447" y="238">
+        <list key="set_roles">
+          <parameter key="dia_malo" value="label"/>
+          <parameter key="readiness_manana" value="metadata"/>
+        </list>
+      </operator>
+      <operator activated="true" class="multiply" compatibility="12.1.001" expanded="true" height="166" name="Multiply" width="90" x="581" y="238"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="12.1.001" expanded="true" height="145" name="CV RF" width="90" x="715" y="340">
+        <parameter key="split_on_batch_attribute" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="5"/>
+        <parameter key="sampling_type" value="automatic"/>
+        <parameter key="use_local_random_seed" value="true"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="enable_parallel_execution" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="replace_missing_values" compatibility="12.1.001" expanded="true" height="103" name="Replace Missing RF" width="90" x="45" y="34">
+            <parameter key="return_preprocessing_model" value="false"/>
+            <parameter key="attribute_filter_type" value="value_type"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="numeric"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default" value="average"/>
+            <list key="columns"/>
+          </operator>
+          <operator activated="true" class="concurrency:parallel_random_forest" compatibility="12.1.001" expanded="true" height="103" name="Random Forest" width="90" x="313" y="34">
+            <parameter key="number_of_trees" value="100"/>
+            <parameter key="criterion" value="gini_index"/>
+            <parameter key="maximal_depth" value="10"/>
+            <parameter key="apply_pruning" value="false"/>
+            <parameter key="confidence" value="0.1"/>
+            <parameter key="apply_prepruning" value="true"/>
+            <parameter key="minimal_gain" value="0.0"/>
+            <parameter key="minimal_leaf_size" value="20"/>
+            <parameter key="minimal_size_for_split" value="4"/>
+            <parameter key="number_of_prepruning_alternatives" value="3"/>
+            <parameter key="random_splits" value="false"/>
+            <parameter key="guess_subset_ratio" value="false"/>
+            <parameter key="subset_ratio" value="1.0"/>
+            <parameter key="voting_strategy" value="confidence vote"/>
+            <parameter key="use_local_random_seed" value="true"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="enable_parallel_execution" value="true"/>
+          </operator>
+          <operator activated="true" class="group_models" compatibility="12.1.001" expanded="true" height="103" name="Group Models RF" width="90" x="447" y="85"/>
+          <connect from_port="training set" to_op="Replace Missing RF" to_port="example set input"/>
+          <connect from_op="Replace Missing RF" from_port="example set output" to_op="Random Forest" to_port="training set"/>
+          <connect from_op="Replace Missing RF" from_port="preprocessing model" to_op="Group Models RF" to_port="models in 1"/>
+          <connect from_op="Random Forest" from_port="model" to_op="Group Models RF" to_port="models in 2"/>
+          <connect from_op="Group Models RF" from_port="model out" to_port="model"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="12.1.001" expanded="true" height="82" name="Apply Model RF" width="90" x="45" y="34">
+            <list key="application_parameters"/>
+          </operator>
+          <connect from_port="model" to_op="Apply Model RF" to_port="model"/>
+          <connect from_port="test set" to_op="Apply Model RF" to_port="unlabelled data"/>
+          <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance interna RF" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="accuracy"/>
+            <parameter key="accuracy" value="true"/>
+            <parameter key="AUC" value="false"/>
+            <parameter key="precision" value="false"/>
+            <parameter key="recall" value="false"/>
+            <parameter key="f_measure" value="false"/>
+            <parameter key="specificity" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="false"/>
+          </operator>
+          <connect from_op="Apply Model RF" from_port="labelled data" to_op="Performance interna RF" to_port="labelled data"/>
+          <connect from_op="Performance interna RF" from_port="performance" to_port="performance 1"/>
+          <connect from_op="Performance interna RF" from_port="example set" to_port="test set results"/>
+        </process>
+      </operator>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="12.1.001" expanded="true" height="145" name="CV LR" width="90" x="715" y="493">
+        <parameter key="split_on_batch_attribute" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="5"/>
+        <parameter key="sampling_type" value="automatic"/>
+        <parameter key="use_local_random_seed" value="true"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="enable_parallel_execution" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="replace_missing_values" compatibility="12.1.001" expanded="true" height="103" name="Replace Missing LR" width="90" x="45" y="34">
+            <parameter key="return_preprocessing_model" value="false"/>
+            <parameter key="attribute_filter_type" value="value_type"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="numeric"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default" value="average"/>
+            <list key="columns"/>
+          </operator>
+          <operator activated="true" class="normalize" compatibility="12.1.001" expanded="true" height="103" name="Normalize LR" width="90" x="179" y="34">
+            <parameter key="return_preprocessing_model" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="numeric"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="real"/>
+            <parameter key="block_type" value="value_series"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_series_end"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="method" value="Z-transformation"/>
+            <parameter key="min" value="0.0"/>
+            <parameter key="max" value="1.0"/>
+            <parameter key="allow_negative_values" value="false"/>
+          </operator>
+          <operator activated="true" class="h2o:logistic_regression" compatibility="9.10.011" expanded="true" height="124" name="Logistic Regression" width="90" x="447" y="34">
+            <parameter key="solver" value="AUTO"/>
+            <parameter key="reproducible" value="true"/>
+            <parameter key="maximum_number_of_threads" value="4"/>
+            <parameter key="use_regularization" value="true"/>
+            <parameter key="lambda_search" value="false"/>
+            <parameter key="number_of_lambdas" value="0"/>
+            <parameter key="lambda_min_ratio" value="0.0"/>
+            <parameter key="early_stopping" value="true"/>
+            <parameter key="stopping_rounds" value="3"/>
+            <parameter key="stopping_tolerance" value="0.001"/>
+            <parameter key="standardize" value="false"/>
+            <parameter key="non-negative_coefficients" value="false"/>
+            <parameter key="add_intercept" value="true"/>
+            <parameter key="compute_p-values" value="false"/>
+            <parameter key="remove_collinear_columns" value="false"/>
+            <parameter key="missing_values_handling" value="MeanImputation"/>
+            <parameter key="max_iterations" value="0"/>
+            <parameter key="max_runtime_seconds" value="0"/>
+          </operator>
+          <operator activated="true" class="group_models" compatibility="12.1.001" expanded="true" height="124" name="Group Models LR" width="90" x="581" y="85"/>
+          <connect from_port="training set" to_op="Replace Missing LR" to_port="example set input"/>
+          <connect from_op="Replace Missing LR" from_port="example set output" to_op="Normalize LR" to_port="example set input"/>
+          <connect from_op="Replace Missing LR" from_port="preprocessing model" to_op="Group Models LR" to_port="models in 1"/>
+          <connect from_op="Normalize LR" from_port="example set output" to_op="Logistic Regression" to_port="training set"/>
+          <connect from_op="Normalize LR" from_port="preprocessing model" to_op="Group Models LR" to_port="models in 2"/>
+          <connect from_op="Logistic Regression" from_port="model" to_op="Group Models LR" to_port="models in 3"/>
+          <connect from_op="Group Models LR" from_port="model out" to_port="model"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="12.1.001" expanded="true" height="82" name="Apply Model LR" width="90" x="45" y="34">
+            <list key="application_parameters"/>
+          </operator>
+          <connect from_port="model" to_op="Apply Model LR" to_port="model"/>
+          <connect from_port="test set" to_op="Apply Model LR" to_port="unlabelled data"/>
+          <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance interna LR" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="accuracy"/>
+            <parameter key="accuracy" value="true"/>
+            <parameter key="AUC" value="false"/>
+            <parameter key="precision" value="false"/>
+            <parameter key="recall" value="false"/>
+            <parameter key="f_measure" value="false"/>
+            <parameter key="specificity" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="false"/>
+          </operator>
+          <connect from_op="Apply Model LR" from_port="labelled data" to_op="Performance interna LR" to_port="labelled data"/>
+          <connect from_op="Performance interna LR" from_port="performance" to_port="performance 1"/>
+          <connect from_op="Performance interna LR" from_port="example set" to_port="test set results"/>
+        </process>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="12.1.001" expanded="true" height="82" name="Generar pred_persistencia" width="90" x="715" y="34">
+        <list key="function_descriptions">
+          <parameter key="pred_persistencia" value="if(readiness_hoy&lt;=4,1,0)"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Europe/Madrid"/>
+      </operator>
+      <operator activated="true" class="numerical_to_binominal" compatibility="12.1.001" expanded="true" height="82" name="pred_persistencia a binominal" width="90" x="849" y="34">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="pred_persistencia"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="0.0"/>
+      </operator>
+      <operator activated="true" class="blending:set_role" compatibility="12.1.001" expanded="true" height="82" name="Roles persistencia" width="90" x="983" y="34">
+        <list key="set_roles">
+          <parameter key="pred_persistencia" value="prediction"/>
+        </list>
+      </operator>
+      <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance persistencia" width="90" x="1117" y="34">
+        <parameter key="main_criterion" value="f_measure"/>
+        <parameter key="accuracy" value="true"/>
+        <parameter key="classification_error" value="false"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="AUC (optimistic)" value="false"/>
+        <parameter key="AUC" value="false"/>
+        <parameter key="AUC (pessimistic)" value="false"/>
+        <parameter key="precision" value="true"/>
+        <parameter key="recall" value="true"/>
+        <parameter key="lift" value="false"/>
+        <parameter key="fallout" value="false"/>
+        <parameter key="f_measure" value="true"/>
+        <parameter key="false_positive" value="false"/>
+        <parameter key="false_negative" value="false"/>
+        <parameter key="true_positive" value="false"/>
+        <parameter key="true_negative" value="false"/>
+        <parameter key="sensitivity" value="false"/>
+        <parameter key="specificity" value="true"/>
+        <parameter key="youden" value="false"/>
+        <parameter key="positive_predictive_value" value="false"/>
+        <parameter key="negative_predictive_value" value="false"/>
+        <parameter key="psep" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="false"/>
+      </operator>
+      <operator activated="true" class="blending:generate_columns" compatibility="12.1.001" expanded="true" height="82" name="Generar pred_media7d" width="90" x="715" y="136">
+        <list key="function_descriptions">
+          <parameter key="pred_media7d" value="if(readiness_media_7d&lt;=4,1,0)"/>
+        </list>
+        <parameter key="keep_all_columns" value="true"/>
+        <parameter key="default_time_zone" value="Europe/Madrid"/>
+      </operator>
+      <operator activated="true" class="numerical_to_binominal" compatibility="12.1.001" expanded="true" height="82" name="pred_media7d a binominal" width="90" x="849" y="136">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="pred_media7d"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="0.0"/>
+      </operator>
+      <operator activated="true" class="blending:set_role" compatibility="12.1.001" expanded="true" height="82" name="Roles media7d" width="90" x="983" y="136">
+        <list key="set_roles">
+          <parameter key="pred_media7d" value="prediction"/>
+        </list>
+      </operator>
+      <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance media7d" width="90" x="1117" y="136">
+        <parameter key="main_criterion" value="f_measure"/>
+        <parameter key="accuracy" value="true"/>
+        <parameter key="classification_error" value="false"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="AUC (optimistic)" value="false"/>
+        <parameter key="AUC" value="false"/>
+        <parameter key="AUC (pessimistic)" value="false"/>
+        <parameter key="precision" value="true"/>
+        <parameter key="recall" value="true"/>
+        <parameter key="lift" value="false"/>
+        <parameter key="fallout" value="false"/>
+        <parameter key="f_measure" value="true"/>
+        <parameter key="false_positive" value="false"/>
+        <parameter key="false_negative" value="false"/>
+        <parameter key="true_positive" value="false"/>
+        <parameter key="true_negative" value="false"/>
+        <parameter key="sensitivity" value="false"/>
+        <parameter key="specificity" value="true"/>
+        <parameter key="youden" value="false"/>
+        <parameter key="positive_predictive_value" value="false"/>
+        <parameter key="negative_predictive_value" value="false"/>
+        <parameter key="psep" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="false"/>
+      </operator>
+      <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance RF" width="90" x="849" y="340">
+        <parameter key="main_criterion" value="AUC"/>
+        <parameter key="accuracy" value="true"/>
+        <parameter key="classification_error" value="false"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="AUC (optimistic)" value="false"/>
+        <parameter key="AUC" value="true"/>
+        <parameter key="AUC (pessimistic)" value="false"/>
+        <parameter key="precision" value="true"/>
+        <parameter key="recall" value="true"/>
+        <parameter key="lift" value="false"/>
+        <parameter key="fallout" value="false"/>
+        <parameter key="f_measure" value="true"/>
+        <parameter key="false_positive" value="false"/>
+        <parameter key="false_negative" value="false"/>
+        <parameter key="true_positive" value="false"/>
+        <parameter key="true_negative" value="false"/>
+        <parameter key="sensitivity" value="false"/>
+        <parameter key="specificity" value="true"/>
+        <parameter key="youden" value="false"/>
+        <parameter key="positive_predictive_value" value="false"/>
+        <parameter key="negative_predictive_value" value="false"/>
+        <parameter key="psep" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="false"/>
+      </operator>
+      <operator activated="true" class="performance_binominal_classification" compatibility="12.1.001" expanded="true" height="82" name="Performance LR" width="90" x="849" y="493">
+        <parameter key="main_criterion" value="AUC"/>
+        <parameter key="accuracy" value="true"/>
+        <parameter key="classification_error" value="false"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="AUC (optimistic)" value="false"/>
+        <parameter key="AUC" value="true"/>
+        <parameter key="AUC (pessimistic)" value="false"/>
+        <parameter key="precision" value="true"/>
+        <parameter key="recall" value="true"/>
+        <parameter key="lift" value="false"/>
+        <parameter key="fallout" value="false"/>
+        <parameter key="f_measure" value="true"/>
+        <parameter key="false_positive" value="false"/>
+        <parameter key="false_negative" value="false"/>
+        <parameter key="true_positive" value="false"/>
+        <parameter key="true_negative" value="false"/>
+        <parameter key="sensitivity" value="false"/>
+        <parameter key="specificity" value="true"/>
+        <parameter key="youden" value="false"/>
+        <parameter key="positive_predictive_value" value="false"/>
+        <parameter key="negative_predictive_value" value="false"/>
+        <parameter key="psep" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="false"/>
+      </operator>
+      <operator activated="true" class="store" compatibility="12.1.001" expanded="true" height="68" name="Store RF clasificacion" width="90" x="983" y="391">
+        <parameter key="repository_entry" value="//Grupo10_SoccerMon/models/modelo_rf_clasificacion_cv"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Generar dia_malo" to_port="table input"/>
+      <connect from_op="Generar dia_malo" from_port="table output" to_op="dia_malo a binominal" to_port="example set input"/>
+      <connect from_op="dia_malo a binominal" from_port="example set output" to_op="Etiqueta dia_malo" to_port="example set input"/>
+      <connect from_op="Etiqueta dia_malo" from_port="example set output" to_op="Multiply" to_port="input"/>
+      <connect from_op="Multiply" from_port="output 1" to_op="Generar pred_persistencia" to_port="table input"/>
+      <connect from_op="Multiply" from_port="output 2" to_op="Generar pred_media7d" to_port="table input"/>
+      <connect from_op="Multiply" from_port="output 3" to_op="CV RF" to_port="example set"/>
+      <connect from_op="Multiply" from_port="output 4" to_op="CV LR" to_port="example set"/>
+      <connect from_op="Generar pred_persistencia" from_port="table output" to_op="pred_persistencia a binominal" to_port="example set input"/>
+      <connect from_op="pred_persistencia a binominal" from_port="example set output" to_op="Roles persistencia" to_port="example set input"/>
+      <connect from_op="Roles persistencia" from_port="example set output" to_op="Performance persistencia" to_port="labelled data"/>
+      <connect from_op="Generar pred_media7d" from_port="table output" to_op="pred_media7d a binominal" to_port="example set input"/>
+      <connect from_op="pred_media7d a binominal" from_port="example set output" to_op="Roles media7d" to_port="example set input"/>
+      <connect from_op="Roles media7d" from_port="example set output" to_op="Performance media7d" to_port="labelled data"/>
+      <connect from_op="CV RF" from_port="test result set" to_op="Performance RF" to_port="labelled data"/>
+      <connect from_op="CV LR" from_port="test result set" to_op="Performance LR" to_port="labelled data"/>
+      <connect from_op="CV RF" from_port="model" to_op="Store RF clasificacion" to_port="input"/>
+      <connect from_op="Performance persistencia" from_port="performance" to_port="result 1"/>
+      <connect from_op="Performance media7d" from_port="performance" to_port="result 2"/>
+      <connect from_op="Performance LR" from_port="performance" to_port="result 3"/>
+      <connect from_op="Performance RF" from_port="performance" to_port="result 4"/>
+    </process>
+  </operator>
+</process>

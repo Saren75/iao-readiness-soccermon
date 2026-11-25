@@ -1,6 +1,0 @@
-metodo,Mañana = hoy,Mañana ≠ hoy,Baja (1-4),Media (5-7),Alta (8-10)
-Persistencia,0.0000,1.4662,1.4846,0.7539,0.6564
-Media de 7 días,0.3865,1.0084,1.5805,0.6333,0.6962
-Ridge A: readiness,0.3885,0.9935,1.7929,0.5869,0.7220
-Ridge B: + bienestar,0.3972,0.9888,1.7888,0.5893,0.7235
-Ridge C: + carga,0.4163,0.9372,1.7578,0.5801,0.6925

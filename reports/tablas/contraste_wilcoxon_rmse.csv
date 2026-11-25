@@ -3,5 +3,9 @@ Random Forest vs Media de 7 días,0.9944,1.081,41,1.049e-07
 Ridge vs Media de 7 días,1.002,1.081,43,6.71e-08
 Random Forest vs Persistencia,0.9944,1.268,46,3.677e-13
 Ridge vs Persistencia,1.002,1.268,48,7.638e-14
+Random Forest vs Media propia,0.9944,1.168,48,1.606e-12
+Ridge vs Media propia,1.002,1.168,45,1.021e-10
 Media de 7 días vs Persistencia,1.081,1.268,48,2.79e-09
+Media de 7 días vs Media propia,1.081,1.168,28,0.03049
+Media propia vs Media global,1.168,1.398,40,7.235e-08
 Random Forest vs Ridge,0.9944,1.002,29,0.278

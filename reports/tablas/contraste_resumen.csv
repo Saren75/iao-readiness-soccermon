@@ -1,4 +1,6 @@
 metodo,MAE_media,MAE_desv,RMSE_media,RMSE_desv
+Media global,1.1139,0.3734,1.3980,0.4117
+Media propia,0.8744,0.2962,1.1676,0.3503
 Persistencia,0.8412,0.3687,1.2680,0.4380
 Media de 7 días,0.7827,0.3063,1.0807,0.3618
 Ridge,0.7428,0.2431,1.0016,0.3095

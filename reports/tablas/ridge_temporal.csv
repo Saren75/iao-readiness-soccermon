@@ -1,6 +1,0 @@
-metodo,MAE,RMSE,R2
-Persistencia,0.7358,1.1937,0.3804
-Media de 7 días,0.6922,1.0269,0.5414
-Ridge A: readiness,0.7087,1.0021,0.5633
-Ridge B: + bienestar,0.7168,1.0120,0.5546
-Ridge C: + carga,0.6926,0.9761,0.5857

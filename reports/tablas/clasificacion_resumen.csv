@@ -1,0 +1,5 @@
+metodo,AUC,recall,precision,F1,especificidad,dias_malos_detectados,falsas_alarmas
+Persistencia (hoy <= 4),0.827,0.5863,0.6021,0.5941,0.9754,513,339
+Media de 7 días <= 4,0.856,0.456,0.875,0.5995,0.9959,399,57
+Regresión logística,0.869,0.408,0.8707,0.5556,0.9961,357,53
+Random Forest,0.888,0.4674,0.895,0.6141,0.9965,409,48
