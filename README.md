@@ -27,15 +27,17 @@ El proyecto combina Altair AI Studio y Python. Cada paso tiene una herramienta p
 
 **Por qué hay modelos en Python (`src/modelo_altair.py`).** SHAP y la prueba de Wilcoxon necesitan tener el modelo en Python: SHAP tiene que recorrer los árboles del Random Forest, y Wilcoxon necesita el error de cada jugadora, que hay que calcular repitiendo la validación. Un modelo guardado por Altair no se puede abrir desde Python, así que `modelo_altair.py` define Ridge y Random Forest **con la misma configuración que en Altair** (mismo relleno de huecos, mismo escalado, mismos hiperparámetros y misma semilla). `contraste_jugadoras.py` comprueba que dan los mismos errores: media de 7 días 1,081 en las dos herramientas, Ridge 1,002 en las dos y Random Forest 0,994 en Python frente a 0,995 en Altair (RMSE). No son el mismo objeto, porque cada herramienta programa el algoritmo a su manera, pero sí el mismo modelo con la misma configuración y prácticamente el mismo error, así que lo que se explica con SHAP y se contrasta con Wilcoxon equivale a lo que se evalúa en Altair.
 
-La guía de los procesos de Altair está en [`ALTAIR.md`](ALTAIR.md).
-
 ## Cómo ejecutarlo
+
+El repositorio incluye los datos procesados, los modelos guardados por Altair y todas las figuras y tablas, así que las dos vías se pueden ejecutar por separado y en cualquier orden.
 
 **En Altair AI Studio:** seguir [`ALTAIR.md`](ALTAIR.md).
 
-**En Python** (hace falta Python 3.12 o 3.13; con 3.14 las versiones fijadas en `requirements.txt` no se instalan):
+**En Python** (hace falta Python 3.12 o 3.13; con 3.14 las versiones fijadas en `requirements.txt` no se instalan. Si `python3` es otra versión, usar `python3.13` en la primera línea del entorno):
 
 ```bash
+git clone https://github.com/Saren75/iao-readiness-soccermon.git
+cd iao-readiness-soccermon
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python src/carga.py
