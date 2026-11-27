@@ -7,9 +7,7 @@ __pycache__/
 # Archivos del sistema y del editor
 .DS_Store
 .vscode/
-.claude/
 
 # Material de la asignatura y notas personales: no forman parte del proyecto
-CLAUDE.md
 view.php.html
 IAO_Practica_Final_Seguimiento_*.pdf

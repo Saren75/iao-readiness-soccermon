@@ -2,11 +2,11 @@
 Fase 2 - Análisis exploratorio de datos (AED).
 
 Lee data/processed/jugadora_dia.csv (generada por src/carga.py) y produce:
-  - figuras en reports/figures/   (para la memoria)
+  - figuras en reports/figures/
   - tablas  en reports/tablas/    (los números que hay detrás de cada figura)
   - un resumen por pantalla con las cifras clave
 
-Uso (desde la carpeta "Practica final"):
+Uso (desde la carpeta del proyecto):
     .venv/bin/python src/aed.py
 
 Preguntas que responde, en este orden:

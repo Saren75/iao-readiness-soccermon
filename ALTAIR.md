@@ -21,15 +21,15 @@ Los procesos leen y guardan sus datos (`Retrieve` y `Store`) dentro del reposito
 ### Paso 2: Configurar la ruta del proyecto (`repo_dir`) en los procesos 01 y 03
 * Los procesos `01_Ingesta_y_Limpieza` y `03_Ingenieria_Caracteristicas` ejecutan `src/carga.py` y `src/features.py` con `Execute Python`. Los dos toman la ruta de la macro **`repo_dir`** (el parámetro *script file* vale `%{repo_dir}/src/carga.py` y `%{repo_dir}/src/features.py`), y el 01 la usa también para leer `data/raw/subjective/`.
 * En otro equipo, abre cada uno de los dos procesos, despliega el panel **Context** (*View $\rightarrow$ Show Panel $\rightarrow$ Context*) y cambia el valor de **`repo_dir`** por la ruta absoluta local de la carpeta del proyecto (**sin barra `/` ni `\` al final**).
-* *(Opcional)* El repositorio ya incluye las tablas procesadas (`data/processed/jugadora_dia` y `ejemplos`) y los modelos entrenados (`models/`), por lo que también es posible ejecutar directamente desde el **Proceso 02** o el **Proceso 04**.
+* *(Opcional)* El repositorio ya incluye las tablas procesadas (`data/processed/Jugadora_dia` y `ejemplos`) y los modelos entrenados (`models/`), por lo que también es posible ejecutar directamente desde el **Proceso 02** o el **Proceso 04**.
 ### Paso 3: Orden de ejecución de los procesos
 Los flujos de la carpeta `processes/` están diseñados para ejecutarse de forma secuencial (`F11` o botón *Run*), comunicándose entre sí mediante el repositorio local:
 
 | Orden | Proceso (`.rmp`) | Qué hace | Entradas (`Retrieve` / disco) | Salidas persistidas (`Store`) |
 | :---: | :--- | :--- | :--- | :--- |
-| **1** | `01_Ingesta_y_Limpieza` | Integra cuestionarios subjetivos y sesiones (`src/carga.py` en `Execute Python`) en una rejilla continua por jugadora y día. | `data/raw/subjective/` (vía macro `repo_dir`) | `data/processed/jugadora_dia`<br>`data/processed/jugadoras` |
-| **2** | `02_AED_Exploracion` | Calcula estadísticos descriptivos, cobertura temporal, matriz de correlaciones y autocorrelación ($t \rightarrow t+1$). | `data/processed/jugadora_dia` | Tablas y vistas exploratorias en *Results* |
-| **3** | `03_Ingenieria_Caracteristicas` | Genera las 56 variables explicativas (`src/features.py` en `Execute Python`) y filtra los pares válidos hoy/mañana. | `data/processed/jugadora_dia` | `data/processed/ejemplos` |
+| **1** | `01_Ingesta_y_Limpieza` | Integra cuestionarios subjetivos y sesiones (`src/carga.py` en `Execute Python`) en una rejilla continua por jugadora y día. | `data/raw/subjective/` (vía macro `repo_dir`) | `data/processed/Jugadora_dia`<br>`data/processed/jugadoras` |
+| **2** | `02_AED_Exploracion` | Calcula estadísticos descriptivos, cobertura temporal, matriz de correlaciones y autocorrelación ($t \rightarrow t+1$). | `data/processed/Jugadora_dia` | Tablas y vistas exploratorias en *Results* |
+| **3** | `03_Ingenieria_Caracteristicas` | Genera las 56 variables explicativas (`src/features.py` en `Execute Python`) y filtra los pares válidos hoy/mañana. | `data/processed/Jugadora_dia` | `data/processed/ejemplos` |
 | **4** | `04_Baselines_y_Modelado` | Evalúa las dos *baselines* (persistencia y media de 7 días) y los modelos mediante CV agrupada por jugadora (`split on batch attribute`, 50 particiones) + `ANOVA` y `T-Test`. | `data/processed/ejemplos` | `models/modelo_ridge_cv`<br>`models/modelo_rf_cv`<br>`models/modelo_nn_cv` |
 | **5** | `05_Validacion_Temporal_2020_2021` | Entrena exclusivamente con la temporada **2020** (6.231 ejemplos) y evalúa sobre **2021** (8.400 ejemplos). | `data/processed/ejemplos` | `models/pipeline_rf_2020`<br>`models/pesos_rf_2020` |
 | **6** | `06_Explicabilidad_y_Errores` | Extrae la importancia global de variables y desglosa el error de 2021 por franja de *readiness* (baja, media, alta). | `models/pipeline_rf_2020`<br>`models/pesos_rf_2020`<br>`data/processed/ejemplos` | Tabla de pesos y métricas por zona en *Results* |
@@ -54,7 +54,8 @@ iao-readiness-soccermon/
 │   ├── modelo_rf_cv
 │   ├── modelo_nn_cv
 │   ├── pipeline_rf_2020
-│   └── pesos_rf_2020
+│   ├── pesos_rf_2020
+│   └── modelo_rf_clasificacion_cv
 ├── processes/                   # Flujos de Altair AI Studio (.rmp)
 │   ├── 01_Ingesta_y_Limpieza
 │   ├── 02_AED_Exploracion
@@ -63,16 +64,20 @@ iao-readiness-soccermon/
 │   ├── 05_Validacion_Temporal_2020_2021
 │   ├── 06_Explicabilidad_y_Errores
 │   └── 07_Clasificacion_Dia_Malo
-├── reports/                     # Gráficas vectoriales (.png) exportadas
+├── reports/
+│   ├── figures/                 # Figuras generadas con Python
+│   ├── altair/                  # Figuras exportadas desde Altair
+│   └── tablas/                  # Los números que hay detrás de cada figura
 ├── src/                         # Scripts de Python (los procesos 01 y 03 ejecutan carga.py y features.py)
-└── README.md                    # Documentación y guía de reproducción
+├── README.md                    # Documentación del proyecto
+└── ALTAIR.md                    # Esta guía de los procesos de Altair
 ```
 
 
 ## 4. Consideraciones metodológicas y orden de ejecución
 ### Orden de ejecución en Altair AI Studio
 Los procesos dentro de `processes/` son secuenciales y se comunican mediante el repositorio local (`Store` / `Retrieve`):
-1. **`01_Ingesta_y_Limpieza`**: Integra los cuestionarios subjetivos y la carga diaria reutilizando `src/carga.py` dentro de `Execute Python` en una rejilla continua por jugadora y fecha, guardando `data/processed/jugadora_dia`.
+1. **`01_Ingesta_y_Limpieza`**: Integra los cuestionarios subjetivos y la carga diaria reutilizando `src/carga.py` dentro de `Execute Python` en una rejilla continua por jugadora y fecha, guardando `data/processed/Jugadora_dia`.
 2. **`02_AED_Exploracion`**: Analiza distribución de la variable objetivo, patrones de valores ausentes, correlaciones y autocorrelación temporal ($t$ frente a $t+1$).
 3. **`03_Ingenieria_Caracteristicas`**: Construye las **56 variables explicativas** reutilizando `src/features.py` dentro de `Execute Python` (historial de *readiness* hoy/ayer/anteayer, **medias móviles de 3 y 7 días**, media propia acumulada hasta la fecha, contexto semanal, variables de bienestar y métricas de carga diaria, aguda/crónica `ATL`, `CTL` de 28 días, `ACWR`, monotonía y *strain*) y filtra los 14.631 pares válidos en `data/processed/ejemplos`.
 4. **`04_Baselines_y_Modelado`**: Evalúa los _baselines_ de referencia (_Persistencia_ y _Media de 7 días_) y ejecuta una validación cruzada agrupada por jugadora mediante `split on batch attribute` (**50 particiones Leave-One-Player-Out**, evaluando siempre sobre jugadoras no vistas en entrenamiento) sobre los tres modelos (_Regresión Ridge_, _Random Forest_ y _Red Neuronal_), realiza los contrastes estadísticos (`ANOVA` y `T-Test`) y persiste los modelos entrenados en `models/`.

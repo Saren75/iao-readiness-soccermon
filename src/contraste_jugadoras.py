@@ -5,7 +5,8 @@ POR QUÉ HACE FALTA
 En Altair, el ANOVA compara los métodos mezclando los errores de todas las
 jugadoras. Como unas jugadoras son mucho más fáciles de predecir que otras,
 esa diferencia entre jugadoras es enorme y tapa la diferencia entre métodos:
-el ANOVA no detecta nada.
+el ANOVA y el t-test solo detectan que la persistencia es peor que el resto,
+no la diferencia entre los modelos y la media de 7 días.
 
 La prueba de Wilcoxon es PAREADA: compara dos métodos jugadora a jugadora
 (¿en esta jugadora, quién falla menos?) y así descuenta lo difícil que sea
@@ -21,8 +22,7 @@ QUÉ HACE
    dos de ellas.
 3. Compara los métodos por parejas con Wilcoxon.
 
-Sirve también para comprobar que Python y Altair dan los mismos errores, y
-para calcular bien la persistencia, que en Altair estaba calculada de otra forma.
+Sirve también para comprobar que Python y Altair dan los mismos errores.
 
 La red neuronal no se incluye: la de Altair usa un algoritmo de aprendizaje que
 scikit-learn no tiene, así que no se puede reproducir de forma equivalente.

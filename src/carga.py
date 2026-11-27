@@ -15,13 +15,13 @@ Salidas (en data/processed/):
     jugadoras.csv      -> correspondencia entre el código corto (A01, B07...) y
                           el identificador original del dataset
 
-Decisiones tomadas aquí (hay que saber explicarlas en la defensa):
+Decisiones:
   1. Se conserva el calendario COMPLETO (todos los días de 2020 y 2021 para cada
      jugadora), aunque no haya datos. Así "la fila anterior" es siempre "ayer",
      y los desfases y ventanas de la Fase 3 no se equivocan con los huecos.
   2. Día sin cuestionario de bienestar -> NaN. No se inventa ni se rellena nada.
   3. La carga viene ya sin huecos en el dataset: los días sin sesión valen 0.
-     OJO: un 0 no distingue "no entrenó" de "no lo registró" (limitación).
+     Un 0 no distingue "no entrenó" de "no lo registró" (limitación).
   4. No se crea todavía ninguna característica nueva ni el objetivo: esta tabla
      solo reorganiza lo que ya está medido en el dataset.
 """
@@ -179,7 +179,9 @@ def comprobar(tabla: pd.DataFrame) -> None:
 def rm_main(macros):
     """Punto de entrada para Altair AI Studio (operador Execute Python).
     Devuelve las dos tablas; el proceso las guarda con Store."""
-    return construir_tabla(Path(macros["repo_dir"]))
+    tabla, jugadoras = construir_tabla(Path(macros["repo_dir"]))
+    comprobar(tabla)
+    return tabla, jugadoras
 
 
 def main() -> None:

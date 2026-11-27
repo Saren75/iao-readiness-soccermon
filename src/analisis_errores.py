@@ -111,7 +111,7 @@ def figura(jug: pd.DataFrame, cambio: pd.DataFrame) -> None:
     a3.legend(loc="upper left", fontsize=8)
 
     fig.tight_layout()
-    fig.savefig(FIGURAS / "19_analisis_errores.png", dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(FIGURAS / "14_analisis_errores.png", dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 

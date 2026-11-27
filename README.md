@@ -25,7 +25,7 @@ El proyecto combina Altair AI Studio y Python. Cada paso tiene una herramienta p
 
 **Los modelos se entrenan y evalúan en Altair.** Python se usa para preparar los datos (los mismos scripts que ejecuta Altair) y para los análisis que Altair no ofrece: la prueba de Wilcoxon, SHAP, repetir la validación cambiando una cosa cada vez y el AUC de las reglas de referencia en la clasificación.
 
-**Por qué hay modelos en Python (`src/modelo_altair.py`).** SHAP y la prueba de Wilcoxon necesitan tener el modelo en Python: SHAP tiene que recorrer los árboles del Random Forest, y Wilcoxon necesita el error de cada jugadora, que hay que calcular repitiendo la validación. Un modelo guardado por Altair no se puede abrir desde Python, así que `modelo_altair.py` define Ridge y Random Forest **con la misma configuración que en Altair** (mismo relleno de huecos, mismo escalado, mismos hiperparámetros y misma semilla). `contraste_jugadoras.py` comprueba que dan los mismos errores: media de 7 días 1,081 en las dos herramientas, Ridge 1,002 en las dos y Random Forest 0,994 en Python frente a 0,995 en Altair (RMSE). Así, lo que se explica con SHAP y se contrasta con Wilcoxon es el mismo modelo que se evalúa en Altair.
+**Por qué hay modelos en Python (`src/modelo_altair.py`).** SHAP y la prueba de Wilcoxon necesitan tener el modelo en Python: SHAP tiene que recorrer los árboles del Random Forest, y Wilcoxon necesita el error de cada jugadora, que hay que calcular repitiendo la validación. Un modelo guardado por Altair no se puede abrir desde Python, así que `modelo_altair.py` define Ridge y Random Forest **con la misma configuración que en Altair** (mismo relleno de huecos, mismo escalado, mismos hiperparámetros y misma semilla). `contraste_jugadoras.py` comprueba que dan los mismos errores: media de 7 días 1,081 en las dos herramientas, Ridge 1,002 en las dos y Random Forest 0,994 en Python frente a 0,995 en Altair (RMSE). No son el mismo objeto, porque cada herramienta programa el algoritmo a su manera, pero sí el mismo modelo con la misma configuración y prácticamente el mismo error, así que lo que se explica con SHAP y se contrasta con Wilcoxon equivale a lo que se evalúa en Altair.
 
 La guía de los procesos de Altair está en [`ALTAIR.md`](ALTAIR.md).
 
@@ -33,7 +33,7 @@ La guía de los procesos de Altair está en [`ALTAIR.md`](ALTAIR.md).
 
 **En Altair AI Studio:** seguir [`ALTAIR.md`](ALTAIR.md).
 
-**En Python** (hace falta Python 3.11 o superior):
+**En Python** (hace falta Python 3.12 o 3.13; con 3.14 las versiones fijadas en `requirements.txt` no se instalan):
 
 ```bash
 python3 -m venv .venv
@@ -54,8 +54,8 @@ En Windows, sustituir `.venv/bin/` por `.venv\Scripts\`.
 - `aed.py` genera las figuras 01 a 09 y sus tablas.
 - `features.py` genera `data/processed/ejemplos.csv`.
 - `contraste_jugadoras.py` repite la validación por jugadoras de Altair con las cuatro referencias, hace la prueba de Wilcoxon y guarda la predicción de cada día.
-- `analisis_errores.py` analiza esas predicciones y genera la figura 19.
-- `explicabilidad.py` calcula SHAP y genera las figuras 15 a 18.
+- `analisis_errores.py` analiza esas predicciones y genera la figura 14.
+- `explicabilidad.py` calcula SHAP y genera las figuras 10 a 13.
 - `sensibilidad.py` repite la validación quitando las notas repetidas, añadiendo si el equipo entrenó y quitando el strain.
 - `clasificacion_referencias.py` calcula el AUC de las dos reglas de referencia de la clasificación.
 
@@ -284,7 +284,7 @@ Se entrenan en Altair con las 56 características:
 | Modelo | Qué es | Configuración |
 |---|---|---|
 | Ridge (`Linear Regression` con regularización) | Suma ponderada de las características; la regularización evita pesos exagerados cuando hay entradas muy correlacionadas | ridge = 10 |
-| Random Forest | Media de muchos árboles de decisión entrenados con muestras distintas; capta relaciones no lineales y umbrales | 100 árboles, profundidad máxima 10, al menos 20 ejemplos por hoja, semilla 1992 |
+| Random Forest | Media de muchos árboles de decisión entrenados con muestras distintas; capta relaciones no lineales y umbrales | 100 árboles, profundidad máxima 10, al menos 20 ejemplos por hoja, ganancia mínima 0,01 por división, semilla 1992 |
 | Red neuronal (perceptrón multicapa) | Capas de neuronas que combinan las entradas de forma no lineal | Una capa oculta de 16 neuronas, 200 ciclos, tasa de aprendizaje 0,001 |
 
 **Los hiperparámetros son fijos.** No se ajustan dentro de la validación por el coste: la validación por jugadoras tarda unos 10 minutos en Altair, y probar combinaciones dentro de cada una de las 50 particiones multiplicaría ese tiempo por el número de combinaciones. Se han elegido valores moderados: regularización media en Ridge, y árboles limitados en profundidad y tamaño de hoja para no sobreajustar con unos 14.000 ejemplos. Es una limitación del estudio, sobre todo para la red neuronal (apartado 3.2).
@@ -339,7 +339,7 @@ Validación por jugadoras (media entre jugadoras ± desviación típica):
 
 Validación temporal (2020 → 2021, Altair): persistencia RMSE 1,194 y MAE 0,736; media de 7 días RMSE 1,027 y MAE 0,692.
 
-**La referencia a batir es la media de 7 días**, no la persistencia: gana en las dos métricas y en las dos validaciones. Comparando jugadora a jugadora (Wilcoxon), mejora a la persistencia en 48 de 50 jugadoras y a la media propia en 28 (p < 0,05 en los dos casos).
+**La referencia a batir es la media de 7 días**, no la persistencia: gana en las dos métricas y en las dos validaciones. Comparando jugadora a jugadora (Wilcoxon), mejora a la persistencia en 48 de 50 jugadoras (p < 0,001). Frente a la media propia la ventaja es menor: gana en 28 jugadoras por RMSE (p = 0,03, que no supera la corrección por comparaciones múltiples del apartado 3.3) y en 32 por MAE (p = 0,004).
 
 Dónde falla cada una (MAE de todos los días juntos, validación por jugadoras):
 
@@ -408,7 +408,7 @@ Validación temporal (Altair, proceso 05; entrenar con 2020, evaluar en 2021):
 
 Sobre el Random Forest entrenado con 2020 y evaluado en 2021. La versión en Python obtiene MAE 0,656 y RMSE 0,950 (Altair: 0,667 y 0,960).
 
-![Importancia SHAP](reports/figures/15_shap_importancia.png)
+![Importancia SHAP](reports/figures/10_shap_importancia.png)
 
 | Bloque | % de la importancia total |
 |---|---|
@@ -423,16 +423,16 @@ Sobre el Random Forest entrenado con 2020 y evaluado en 2021. La versión en Pyt
 - **El resto del cuestionario apenas cuenta** (6 %): fatiga, sueño, estrés, ánimo y dolor muscular no añaden casi nada a lo que ya dice la readiness.
 - **El día de la semana influye un poco**: si mañana es domingo la predicción baja; si es sábado, sube.
 
-![Dependencia SHAP](reports/figures/16_shap_dependencia.png)
+![Dependencia SHAP](reports/figures/11_shap_dependencia.png)
 
 - **La carga tiene un umbral.** Hasta unas 500 unidades de carga diaria el efecto es ligeramente positivo; a partir de ahí la predicción baja, hasta medio punto o más con cargas por encima de 800. Esta forma no lineal es la que un modelo lineal no puede representar.
 - **La media de 7 días actúa casi en línea recta**: cada punto de más en la media sube la predicción alrededor de medio punto.
 
-Dos casos individuales, ambos con readiness real baja:
+Dos casos individuales: entre los días explicados con readiness real de 4 o menos, el de menor error y el de mayor error.
 
-![Día malo acertado](reports/figures/17_shap_caso_dia_malo_acertado.png)
+![Día malo acertado](reports/figures/12_shap_caso_dia_malo_acertado.png)
 
-![Día malo fallado](reports/figures/18_shap_caso_dia_malo_fallado.png)
+![Día malo fallado](reports/figures/13_shap_caso_dia_malo_fallado.png)
 
 - **Acierto** (A14, 25-02-2021): la jugadora lleva varios días bajos (media de 3 días de 3,3 y de 7 días de 4,6), y eso arrastra la predicción hasta 3,99 (real: 4).
 - **Fallo** (A20, 04-10-2021): la jugadora viene de una semana muy buena (media de 8,75, hoy un 9) y al día siguiente declara un 1. Nada en sus datos lo anticipaba y el modelo predice 8,55. Es el tipo de día que el sistema no puede prever con esta información.
@@ -441,7 +441,7 @@ Dos casos individuales, ambos con readiness real baja:
 
 Sobre las predicciones de la validación por jugadoras: Random Forest frente a la media de 7 días. Las cifras son MAE de todos los días juntos.
 
-![Análisis de errores](reports/figures/19_analisis_errores.png)
+![Análisis de errores](reports/figures/14_analisis_errores.png)
 
 **Por jugadora.** El MAE del Random Forest va de 0,32 a 1,36 según la jugadora (mediana 0,70). Mejora a la media de 7 días en 37 de 50.
 
@@ -507,7 +507,7 @@ Validación por jugadoras; media entre jugadoras.
 | Con `equipo_entreno_hoy` | 14.631 | 1,268 | 1,081 | 1,002 | 0,994 | 0,783 | 0,735 |
 | Sin strain | 14.631 | 1,268 | 1,081 | 1,002 | 0,994 | 0,783 | 0,735 |
 
-En las cuatro variantes, Ridge y Random Forest mejoran a la media de 7 días con p < 0,001 (Wilcoxon por jugadora, RMSE y MAE).
+En las cuatro variantes, Ridge y Random Forest mejoran a la media de 7 días: p < 0,001 con el RMSE y p ≤ 0,001 con el MAE (Wilcoxon por jugadora).
 
 - **Notas repetidas: no deciden las conclusiones.** Sin las rachas, todos los métodos fallan algo más (eran días fáciles), pero la ventaja de los modelos sobre la referencia se mantiene. La mejora no viene de esas jugadoras.
 - **Ceros de carga: saber si el equipo entrenó no aporta.** De los días con carga 0, solo en un 22 % había entrenado más de la mitad del resto del equipo; el resto son, sobre todo, días libres del equipo. El modelo ya lo deduce de la propia carga y de sus medias, y el error no cambia (p = 0,57 frente a la base). No se añade a las características.

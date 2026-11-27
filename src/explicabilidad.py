@@ -98,7 +98,7 @@ def fig_importancia(importancia: pd.Series, por_bloque: pd.Series, n: int = 15) 
     a2.set_title("Importancia por bloque")
     a2.grid(axis="x", color=GRIS_CLARO, linewidth=0.8)
     fig.tight_layout()
-    fig.savefig(FIGURAS / "15_shap_importancia.png", dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(FIGURAS / "10_shap_importancia.png", dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -116,7 +116,7 @@ def fig_dependencia(valores: pd.DataFrame, x: pd.DataFrame, caracteristicas: lis
     fig.suptitle("Cómo cambia la predicción según el valor de cada característica",
                  x=0.01, ha="left", fontsize=11, fontweight="bold")
     fig.tight_layout()
-    fig.savefig(FIGURAS / "16_shap_dependencia.png", dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(FIGURAS / "11_shap_dependencia.png", dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -173,8 +173,8 @@ def main() -> None:
     malos = info[info["real"] <= 4]
     acierto = (malos["prediccion"] - malos["real"]).abs().idxmin()
     fallo = (malos["prediccion"] - malos["real"]).idxmax()
-    fig_caso(valores, x, info, acierto, "17_shap_caso_dia_malo_acertado.png")
-    fig_caso(valores, x, info, fallo, "18_shap_caso_dia_malo_fallado.png")
+    fig_caso(valores, x, info, acierto, "12_shap_caso_dia_malo_acertado.png")
+    fig_caso(valores, x, info, fallo, "13_shap_caso_dia_malo_fallado.png")
     print("\nCasos individuales:")
     print(info.loc[[acierto, fallo], ["jugadora", "fecha", "real", "prediccion"]].to_string())
 
